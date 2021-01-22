@@ -153,6 +153,4 @@ public class AppointmentViewController extends ViewController {
     private void setView(AppointmentsForDayView view ){
         this.view = view;
     }
-    
-    
 }
