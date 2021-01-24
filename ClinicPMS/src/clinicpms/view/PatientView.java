@@ -39,7 +39,15 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.WindowConstants;
 
 /**
- *
+ * 
+ * -- The view receives an image of the patient details in the received
+ * EntityDescriptor.Patient, which also encapsulates a patient's guardian (if 
+ * exists) and appointment history
+ * -- The view sends an updated image of the patient in 
+ * EntityDescriptor.Selection.Patient 
+ * -- 
+ * -- The view receives a collection of all patients on the system in the
+ * received EntityDescriptor.Collection.Patients
  * @author colin
  */
 public class PatientView extends View
@@ -164,45 +172,10 @@ public class PatientView extends View
             }
         });
 
-        /**
-         * Looked as if via "customised code" option NB would have created this
-         * automatically, but curiously it didn't work
-         */
-        /*
-        
-        tblAppointmentHistory.setModel(new javax.swing.table.DefaultTableModel(
-            new EntityDescriptor.Appointment [][] {
-                {null}
-            },
-            new String [] {
-                "Appointments"
-            }
-        ));
-        */
-        /**
-         * the DefaultTableCellRenderer is configured to centre align the 
-         * the column header title
-         */
         appointmentHistoryModel.addColumn("Dental appointments");
         DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
         renderer.setHorizontalAlignment(SwingConstants.CENTER);
         tblAppointmentHistory.getColumnModel().getColumn(0).setHeaderRenderer(renderer);
-
-        /*
-        txtGuardian.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                pnlContactDetails.requestFocusInWindow();
-            }
-            @Override
-            public void focusLost(FocusEvent e) {
-                txtGuardianFocusLost();
-            }    
-        });
-        // above code if patient selection mechanism outsourced to another view
-        // the change of focus would trigger the launch of another view
-        // responsible for the guardian slection
-        */
     }
     
     private void initialiseViewMode(ViewMode value){
@@ -277,14 +250,15 @@ public class PatientView extends View
         if (e.getPropertyName().equals(
                 PatientViewControllerPropertyEvent.PATIENT_RECORD_RECEIVED.toString())){
             setEntityDescriptor((EntityDescriptor)e.getNewValue());
-
+            /*
             if (getEntityDescriptor().getPatient().isKeyDefined()){
                 this.btnCreateUpdatePatient.setText(UPDATE_BUTTON);
                 initialisePatientViewComponentFromED();
             }
             else{
                 //UnSpecifiedError action
-            }  
+            }
+            */
         }
         else if (e.getPropertyName().equals(
                 PatientViewControllerPropertyEvent.
@@ -490,8 +464,7 @@ public class PatientView extends View
             this.cmbSelectGuardian.setEnabled(false);
         }
     }
-    private void populateTableData(
-            ArrayList<EntityDescriptor.Appointment> appointments,
+    private void populateTableData(ArrayList<EntityDescriptor.Appointment> appointments,
             Vector<String> header){
         Vector<EntityDescriptor.Appointment> row = new Vector<>();
         Vector<Vector<EntityDescriptor.Appointment>> rows = new Vector<>();
@@ -554,27 +527,27 @@ public class PatientView extends View
         initialisePatientAppointmentHistoryViewFromED(Category.DENTAL);
     }
     private void initialiseEntityFromView(){
-        getEntityDescriptor().getPatient().getData().setCounty((getCounty()));
-        getEntityDescriptor().getPatient().getData().setDentalRecallDate(getDentalRecallDate());
-        getEntityDescriptor().getPatient().getData().setDOB(getDOB());
-        getEntityDescriptor().getPatient().getData().setForenames(getForenames());
-        getEntityDescriptor().getPatient().getData().setGender(getGender());
-        getEntityDescriptor().getPatient().getData().setDentalRecallDate(getDentalRecallDate());
-        getEntityDescriptor().getPatient().getData().setDentalRecallFrequency(getDentalRecallFrequency());
-        getEntityDescriptor().getPatient().getData().setHygieneRecallDate(getHygieneRecallDate());
-        getEntityDescriptor().getPatient().getData().setHygieneRecallFrequency(getHygieneRecallFrequency());
-        getEntityDescriptor().getPatient().getData().setIsGuardianAPatient(getIsGuardianAPatient());
-        getEntityDescriptor().getPatient().getData().setLine1(getLine1());
-        getEntityDescriptor().getPatient().getData().setLine2(getLine2());
-        getEntityDescriptor().getPatient().getData().setNotes(getNotes());
-        getEntityDescriptor().getPatient().getData().setPhone1(getPhone1());
-        getEntityDescriptor().getPatient().getData().setPhone2(getPhone2());
-        getEntityDescriptor().getPatient().getData().setPostcode(getPostcode());
-        getEntityDescriptor().getPatient().getData().setSurname(getSurname());
-        getEntityDescriptor().getPatient().getData().setTitle(getPatientTitle());
-        getEntityDescriptor().getPatient().getData().setTown(getTown());
+        getEntityDescriptor().getSelection().getPatient().getData().setCounty((getCounty()));
+        getEntityDescriptor().getSelection().getPatient().getData().setDentalRecallDate(getDentalRecallDate());
+        getEntityDescriptor().getSelection().getPatient().getData().setDOB(getDOB());
+        getEntityDescriptor().getSelection().getPatient().getData().setForenames(getForenames());
+        getEntityDescriptor().getSelection().getPatient().getData().setGender(getGender());
+        getEntityDescriptor().getSelection().getPatient().getData().setDentalRecallDate(getDentalRecallDate());
+        getEntityDescriptor().getSelection().getPatient().getData().setDentalRecallFrequency(getDentalRecallFrequency());
+        getEntityDescriptor().getSelection().getPatient().getData().setHygieneRecallDate(getHygieneRecallDate());
+        getEntityDescriptor().getSelection().getPatient().getData().setHygieneRecallFrequency(getHygieneRecallFrequency());
+        getEntityDescriptor().getSelection().getPatient().getData().setIsGuardianAPatient(getIsGuardianAPatient());
+        getEntityDescriptor().getSelection().getPatient().getData().setLine1(getLine1());
+        getEntityDescriptor().getSelection().getPatient().getData().setLine2(getLine2());
+        getEntityDescriptor().getSelection().getPatient().getData().setNotes(getNotes());
+        getEntityDescriptor().getSelection().getPatient().getData().setPhone1(getPhone1());
+        getEntityDescriptor().getSelection().getPatient().getData().setPhone2(getPhone2());
+        getEntityDescriptor().getSelection().getPatient().getData().setPostcode(getPostcode());
+        getEntityDescriptor().getSelection().getPatient().getData().setSurname(getSurname());
+        getEntityDescriptor().getSelection().getPatient().getData().setTitle(getPatientTitle());
+        getEntityDescriptor().getSelection().getPatient().getData().setTown(getTown());
         if (getGuardian() != null){
-            getEntityDescriptor().getPatient().setGuardian(getGuardian());
+            getEntityDescriptor().getSelection().getPatient().setGuardian(getGuardian());
         }
         
             
@@ -1449,7 +1422,7 @@ public class PatientView extends View
         getEntityDescriptor().getSelection().setPatient(patient);
         ActionEvent actionEvent = new ActionEvent(
                 this,ActionEvent.ACTION_PERFORMED,
-                PatientViewControllerActionEvent.PATIENT_SELECTION_REQUEST.toString());
+                PatientViewControllerActionEvent.PATIENT_REQUEST.toString());
         this.getMyController().actionPerformed(actionEvent);
     }
 

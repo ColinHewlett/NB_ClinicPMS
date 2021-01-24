@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 /**
  *
  * @author colin
+ * V02_VCSuppliesDataOnDemandToView
  */
 public abstract class ViewController implements ActionListener{
 
@@ -42,13 +43,19 @@ public abstract class ViewController implements ActionListener{
                               HYGIENE_APPOINTMENT_HISTORY}
     
     public enum AppointmentViewControllerActionEvent {
-                                            //APPOINTMENT_CANCEL_REQUEST,/*of selected appt*/
+                                            APPOINTMENT_CANCEL_REQUEST,/*of selected appt*/
                                             APPOINTMENT_VIEW_REQUEST,/*of selected appt*/
                                             APPOINTMENT_VIEW_CREATE_REQUEST,
                                             APPOINTMENT_VIEW_UPDATE_REQUEST,
                                             APPOINTMENTS_VIEW_CLOSED,
-                                            DAY_SELECTION,
-                                            PATIENT_RECORDS_REQUEST
+                                            APPOINTMENTS_FOR_DAY_REQUEST,
+                                            PATIENTS_REQUEST
+                                            }
+    public enum AppointmentViewControllerPropertyEvent {
+                                            APPOINTMENT_RECEIVED,
+                                            APPOINTMENTS_RECEIVED,
+                                            APPOINTMENTS_VIEW_CLOSED,
+                                            APPOINTMENTS_VIEW_CLOSE_RECEIVED
                                             }
     
     public enum DesktopViewControllerActionEvent {
@@ -59,29 +66,21 @@ public abstract class ViewController implements ActionListener{
     }
 
     public static enum PatientViewControllerActionEvent {
-                                            PATIENT_RECORDS_REQUEST,
-                                            PATIENT_SELECTION_REQUEST,
+                                            PATIENT_REQUEST,
+                                            PATIENTS_REQUEST,
                                             PATIENT_VIEW_CLOSED,
                                             PATIENT_VIEW_CREATE_REQUEST,
                                             PATIENT_VIEW_UPDATE_REQUEST,
                                             }
+    public static enum PatientViewControllerPropertyEvent {
+                                            PATIENT_RECEIVED,
+                                            PATIENTS_RECEIVED}
     
-    public enum AppointmentViewControllerPropertyEvent {
-                                            APPOINTMENT_VIEW_CLOSE_RECEIVED,
-                                            APPOINTMENT_RECORDS_RECEIVED,
-                                            APPOINTMENTS_VIEW_CLOSE_RECEIVED
-                                            //APPOINTMENT_RECORD_RECEIVED,
-                                            //APPOINTMENT_DAY_SELECTED
-                                            }
+    
     public enum DesktopViewControllerPropertyEvent{
                                             
     }
-    public static enum PatientViewControllerPropertyEvent {
-                                            PATIENT_APPOINTMENTS_RECEIVED,
-                                            PATIENT_RECORD_RECEIVED,
-                                            PATIENT_RECORDS_RECEIVED,
-                                            PATIENT_GUARDIAN_SELECTION_RECEIVED,
-                                            PATIENT_SELECTION_RECEIVED} 
+     
     
     //public abstract JInternalFrame getView(); 
 }
