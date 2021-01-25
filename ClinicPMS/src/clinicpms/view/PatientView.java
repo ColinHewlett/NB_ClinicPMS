@@ -11,12 +11,12 @@ import clinicpms.controller.ViewController;
 import clinicpms.controller.ViewController.PatientField;
 import clinicpms.controller.ViewController.PatientViewControllerActionEvent;
 import clinicpms.controller.ViewController.PatientViewControllerPropertyEvent;
+import clinicpms.view.interfaces.IView;
 import clinicpms.view.exceptions.CrossCheckErrorException;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.optionalusertools.DateChangeListener;
 import com.github.lgooddatepicker.zinternaltools.DateChangeEvent;
 import java.awt.event.*;
-import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.time.format.DateTimeFormatter;
@@ -51,7 +51,6 @@ import javax.swing.WindowConstants;
  * @author colin
  */
 public class PatientView extends View
-                         implements PropertyChangeListener
                                     {
     private enum TitleItem {Mr,
                             Mrs,
@@ -248,7 +247,7 @@ public class PatientView extends View
     public void propertyChange(PropertyChangeEvent e){
 
         if (e.getPropertyName().equals(
-                PatientViewControllerPropertyEvent.PATIENT_RECORD_RECEIVED.toString())){
+                PatientViewControllerPropertyEvent.PATIENT_RECEIVED.toString())){
             setEntityDescriptor((EntityDescriptor)e.getNewValue());
             /*
             if (getEntityDescriptor().getPatient().isKeyDefined()){

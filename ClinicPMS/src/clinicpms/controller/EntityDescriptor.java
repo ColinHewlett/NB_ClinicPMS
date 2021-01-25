@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
  * @author colin
  */
 public class EntityDescriptor {
-
+    private enum StringRepresentation{COMPLETE, PARTIAL};
     private EntityDescriptor.Appointment appointment = null;
     private EntityDescriptor.Patient patient = null;
     private EntityDescriptor.Selection selection = null;
@@ -52,15 +52,14 @@ public class EntityDescriptor {
      * EntityDescriptor.Appointment inner class
      */
     public class Appointment {
-
         private RenderedAppointment data = null;
         private EntityDescriptor.Patient appointee = null;
-
-        protected Appointment() {
+        
+        protected Appointment(){
             data = new RenderedAppointment();
             appointee = new Patient();
         }
-
+        
         public void setData(RenderedAppointment value) {
             data = value;
         }
@@ -86,7 +85,7 @@ public class EntityDescriptor {
             DateTimeFormatter customFormatter = 
                     DateTimeFormatter.ofPattern("MM/dd/yyyy 'at' hh:mm a");
             LocalDateTime startDateTime = getData().getStart();
-            
+                
             return customFormatter.format(startDateTime);
         }
         
@@ -395,7 +394,7 @@ public class EntityDescriptor {
         public ArrayList<EntityDescriptor.Patient> getPatients(){
             return patients;
         }
-        
+        /*
         public class Appointment {
             RenderedAppointment data = null;
             Patient appointee = null;
@@ -463,7 +462,7 @@ public class EntityDescriptor {
             }
             
         }
-        /*
+        
         public class Patients {
             ArrayList<EntityDescriptor.Collection.Patients.Patient> data = null;
             

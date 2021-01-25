@@ -151,7 +151,7 @@ public class DesktopViewController extends ViewController{
             ViewController.DesktopViewControllerActionEvent.
                     DESKTOP_VIEW_APPOINTMENTS_REQUEST.toString())){
             appointmentViewControllers.add(
-                                    new AppointmentViewController(this));
+                                    new AppointmentViewController(this, getView()));
             requestedView = (JInternalFrame)appointmentViewControllers.get(
                     appointmentViewControllers.size()-1).getView();
         }
@@ -159,7 +159,7 @@ public class DesktopViewController extends ViewController{
             ViewController.DesktopViewControllerActionEvent.
                     DESKTOP_VIEW_PATIENTS_REQUEST.toString())){
             patientViewControllers.add(
-                                    new PatientViewController(this));
+                                    new PatientViewController(this, getView()));
             requestedView = (JInternalFrame)patientViewControllers.get(
                     patientViewControllers.size()-1).getView();
         } 

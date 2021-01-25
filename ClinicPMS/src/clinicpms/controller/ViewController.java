@@ -45,17 +45,16 @@ public abstract class ViewController implements ActionListener{
     public enum AppointmentViewControllerActionEvent {
                                             APPOINTMENT_CANCEL_REQUEST,/*of selected appt*/
                                             APPOINTMENT_VIEW_REQUEST,/*of selected appt*/
+                                            APPOINTMENTS_VIEW_CLOSED,
+                                            APPOINTMENTS_REQUEST/*triggered by day selection*/
+                                            }
+    public enum AppointmentViewDialogActionEvent {
                                             APPOINTMENT_VIEW_CREATE_REQUEST,
                                             APPOINTMENT_VIEW_UPDATE_REQUEST,
-                                            APPOINTMENTS_VIEW_CLOSED,
-                                            APPOINTMENTS_FOR_DAY_REQUEST,
-                                            PATIENTS_REQUEST
                                             }
     public enum AppointmentViewControllerPropertyEvent {
                                             APPOINTMENT_RECEIVED,
-                                            APPOINTMENTS_RECEIVED,
-                                            APPOINTMENTS_VIEW_CLOSED,
-                                            APPOINTMENTS_VIEW_CLOSE_RECEIVED
+                                            APPOINTMENTS_RECEIVED
                                             }
     
     public enum DesktopViewControllerActionEvent {

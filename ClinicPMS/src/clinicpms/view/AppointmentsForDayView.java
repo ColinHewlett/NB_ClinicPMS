@@ -7,7 +7,6 @@ package clinicpms.view;
 import clinicpms.controller.EntityDescriptor;
 import clinicpms.controller.ViewController;
 import clinicpms.controller.ViewController.AppointmentViewControllerActionEvent;
-import clinicpms.controller.ViewController.AppointmentViewPropertyEvent;
 import clinicpms.view.interfaces.IView;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.optionalusertools.DateChangeListener;
@@ -35,9 +34,7 @@ import java.beans.PropertyChangeEvent;
  *
  * @author colin
  */
-public class AppointmentsForDayView extends javax.swing.JInternalFrame 
-                              implements PropertyChangeListener,
-                                         IView{
+public class AppointmentsForDayView extends View{
     private final int START_COLUMN = 0;
     private final int DURATION_COLUMN = 1;
     private final int PATIENT_COLUMN = 2;
@@ -58,7 +55,7 @@ public class AppointmentsForDayView extends javax.swing.JInternalFrame
     private String start = null;
     private String duration = null;
     private String notes = null;
-    private EntityDescriptor entity = null;
+    private EntityDescriptor entityDescriptor = null;
     private HashMap<String,String> patientEntityValues = null;
     private DateTimeFormatter dmyFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     //state variables which support IPatientShortData interface
@@ -69,14 +66,20 @@ public class AppointmentsForDayView extends javax.swing.JInternalFrame
      * @param e PropertyChangeEvent which supports the following properties
      * --
      */ 
+    @Override
     public void propertyChange(PropertyChangeEvent e){
         String propertyName = e.getPropertyName();
-        if (propertyName.equals(Integer.toString(AppointmentViewPropertyEvent.APPOINTMENT_RECORDS_RECEIVED))){
+        if (propertyName.equals(ViewController.AppointmentViewControllerPropertyEvent.APPOINTMENTS_RECEIVED.toString())){
+            setEntityDescriptor((EntityDescriptor)e.getNewValue());
+            initialiseViewFromEDCollection();
             doRefreshView((ArrayList<HashMap<String,String>>)e.getNewValue());
         }
-        if (propertyName.equals(AppointmentViewPropertyEvent..PATIENT_RECORD_RECEIVED)){
+        if (propertyName.equals(ViewController.AppointmentViewControllerPropertyEvent.APPOINTMENT_RECEIVED.toString())){
             setPatientEntityValues((HashMap<String,String>)e.getNewValue());
         }
+    }
+    private void initialiseViewFromEDCollection(){
+        
     }
     
     private void setPatientEntityValues(HashMap<String,String> patientEntityValues){
@@ -317,12 +320,12 @@ public class AppointmentsForDayView extends javax.swing.JInternalFrame
         
     }
 
-    public EntityDescriptor getEntity(){
-        return this.entity;
+    public EntityDescriptor getEntityDescriptor(){
+        return this.entityDescriptor;
     }
     
-    private void setEntity (EntityDescriptor value){
-        this.entity = value;
+    private void setEntityDescriptor (EntityDescriptor value){
+        this.entityDescriptor = value;
     }
     
     private ActionListener getMyController(){
