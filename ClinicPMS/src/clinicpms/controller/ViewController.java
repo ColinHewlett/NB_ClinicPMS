@@ -49,11 +49,14 @@ public abstract class ViewController implements ActionListener{
                                             APPOINTMENTS_REQUEST/*triggered by day selection*/
                                             }
     public enum AppointmentViewDialogActionEvent {
+                                            APPOINTMENT_VIEW_CLOSE_REQUEST,
                                             APPOINTMENT_VIEW_CREATE_REQUEST,
                                             APPOINTMENT_VIEW_UPDATE_REQUEST,
                                             }
+    public enum AppointmentViewDialogPropertyEvent {
+                                            APPOINTMENT_RECEIVED
+                                            }
     public enum AppointmentViewControllerPropertyEvent {
-                                            APPOINTMENT_RECEIVED,
                                             APPOINTMENTS_RECEIVED
                                             }
     
@@ -79,6 +82,9 @@ public abstract class ViewController implements ActionListener{
     public enum DesktopViewControllerPropertyEvent{
                                             
     }
+    
+    public enum ViewMode {CREATE,
+                          UPDATE}
      
     
     //public abstract JInternalFrame getView(); 

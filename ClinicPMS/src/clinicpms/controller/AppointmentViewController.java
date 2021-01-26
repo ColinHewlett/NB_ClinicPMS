@@ -9,18 +9,19 @@ import clinicpms.model.Appointment;
 import clinicpms.model.Patient;
 import clinicpms.store.exceptions.StoreException;
 import clinicpms.view.AppointmentsForDayView;
+import clinicpms.view.AppointmentViewDialog;
 import clinicpms.view.interfaces.IView;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeSupport;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.HashMap;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -29,6 +30,8 @@ import javax.swing.JInternalFrame;
 
 
 public class AppointmentViewController extends ViewController {
+    
+    private final String UNDEFINED_KEY_ON_UPDATE_ERROR = "Undefined key on update to an appointment";
     private ActionListener myController = null;
     private PropertyChangeSupport pcSupport = null;
     private AppointmentsForDayView view = null;
@@ -39,6 +42,8 @@ public class AppointmentViewController extends ViewController {
     private LocalDate day = null;
     private PropertyChangeEvent pcEvent = null;
     private JFrame owningFrame = null;
+    private ViewController.ViewMode viewMode = null;
+    private AppointmentViewDialog dialog = null;
     
     /**
      * 
@@ -49,13 +54,169 @@ public class AppointmentViewController extends ViewController {
     public AppointmentViewController(ActionListener controller, JFrame owner){
         setMyController(controller);
         this.owningFrame = owner;
-        view = new AppointmentsForDayView(this);
+        this.view = new AppointmentsForDayView(this);
         pcSupport = new PropertyChangeSupport(this);
         pcSupport.addPropertyChangeListener(view);
         setView(view);
-        //
+        setNewEntityDescriptor(new EntityDescriptor());
+        getNewEntityDescriptor().getSelection().setDay(LocalDate.now());
+        try{
+            getAppointmentsForSelectedDay();
+        }
+        catch (StoreException e){
+           //UnpsecifiedError action 
+        }
     }
     
+    public void actionPerformed(ActionEvent e){
+        setEntityDescriptorFromView(view.getEntityDescriptor());
+        switch(e.getSource().getClass().getSimpleName()){
+            case "AppointmentsForDayView" -> doAppointmentsForDayViewActions(e);
+            case "DialogForAppointmentDefinition" -> doAppointmentViewDialogActions(e);
+        }
+    }
+    
+    private void doAppointmentViewDialogActions(ActionEvent e){
+        if (e.getActionCommand().equals(AppointmentViewDialogActionEvent.
+                APPOINTMENT_VIEW_CREATE_REQUEST.toString())){
+            Appointment appointment = makeAppointmentFromEDSelection();
+            try{
+                appointment.create();
+                appointment.read();
+                initialiseNewEntityDescriptor();
+                serialiseAppointmentToEDAppointment(appointment);
+                pcEvent = pcEvent = new PropertyChangeEvent(this,
+                        AppointmentViewDialogPropertyEvent.APPOINTMENT_RECEIVED.toString(),
+                        getOldEntityDescriptor(),getNewEntityDescriptor());
+            }
+            catch (StoreException ex){
+                //UnspecifiedError action
+            }
+        }
+        else if (e.getActionCommand().equals(AppointmentViewDialogActionEvent.
+                APPOINTMENT_VIEW_UPDATE_REQUEST.toString())){
+            Appointment appointment = makeAppointmentFromEDSelection();
+            try{
+                appointment.update();
+                appointment.read();
+            }
+            catch (StoreException ex){
+                //UnspecifiedError action
+            }
+            initialiseNewEntityDescriptor();
+            serialiseAppointmentToEDAppointment(appointment);
+            pcEvent = pcEvent = new PropertyChangeEvent(this,
+                    AppointmentViewDialogPropertyEvent.APPOINTMENT_RECEIVED.toString(),
+                    getOldEntityDescriptor(),getNewEntityDescriptor());
+        }
+    }
+    private void doAppointmentsForDayViewActions(ActionEvent e){
+        if (e.getActionCommand().equals(
+                AppointmentViewControllerActionEvent.
+                        APPOINTMENTS_VIEW_CLOSED.toString())){
+            ActionEvent actionEvent = new ActionEvent(
+                    this,ActionEvent.ACTION_PERFORMED,
+                    DesktopViewControllerActionEvent.VIEW_CLOSED_NOTIFICATION.toString());
+            this.myController.actionPerformed(actionEvent);
+        }
+        else if (e.getActionCommand().equals(
+            AppointmentViewControllerActionEvent.APPOINTMENTS_REQUEST.toString())){
+            setEntityDescriptorFromView(((IView)e.getSource()).getEntityDescriptor());
+            try{
+                getAppointmentsForSelectedDay();
+            }
+            catch (StoreException ex){
+                //UnspecifiedError action
+            }
+        }
+        else if (e.getActionCommand().equals(AppointmentViewControllerActionEvent.APPOINTMENT_VIEW_REQUEST.toString())){
+            if (getEntityDescriptorFromView().getSelection().getAppointment().getData().getKey() != null){
+                try{
+                    Appointment appointment = new Appointment(
+                            getEntityDescriptorFromView().getSelection().
+                                    getAppointment().getData().getKey()).read();
+                    initialiseNewEntityDescriptor();
+                    serialiseAppointmentToEDAppointment(appointment);
+                    this.dialog = new AppointmentViewDialog(this,getNewEntityDescriptor(),
+                            this.owningFrame, ViewController.ViewMode.UPDATE);
+                }
+                catch (StoreException ex){
+                    //UnspecifiedError action
+                } 
+            }
+            else {//appointment view requested in order to creae a new appointment
+                initialiseNewEntityDescriptor();
+                this.dialog = new AppointmentViewDialog(this,getNewEntityDescriptor(),
+                        this.owningFrame, ViewController.ViewMode.CREATE);
+            }
+        }
+        else if (e.getActionCommand().equals(AppointmentViewControllerActionEvent.APPOINTMENT_CANCEL_REQUEST.toString())){
+            if (getEntityDescriptorFromView().getSelection().getAppointment().getData().getKey()!=null){
+                Appointment appointment = new Appointment(
+                        getEntityDescriptorFromView().getSelection().getAppointment().getData().getKey());
+                try{
+                    appointment.delete();
+                    getAppointmentsForSelectedDay();
+                }
+                catch (StoreException ex){
+                    //UnspecifiedError action
+                }
+            }
+        }
+    }
+    private void getAppointmentsForSelectedDay() throws StoreException{
+        LocalDate theDay = getEntityDescriptorFromView().getSelection().getDay();
+        if (theDay != null){
+            this.appointments = 
+                new Appointments().getAppointmentsForDayIncludingEmptyAppointmentSlots(theDay);
+            initialiseNewEntityDescriptor();
+            serialiseAppointmentsToEDCollection(appointments);
+            pcEvent = pcEvent = new PropertyChangeEvent(this,
+                    AppointmentViewControllerPropertyEvent.APPOINTMENTS_RECEIVED.toString(),
+                    getOldEntityDescriptor(),getNewEntityDescriptor());
+        }
+    }
+    private Patient makePatientFrom(EntityDescriptor.Patient eP){
+        Patient p = new Patient();
+        for (PatientField pf: PatientField.values()){
+            switch (pf){
+                case KEY -> p.setKey(eP.getData().getKey());
+                case TITLE -> p.getName().setTitle(eP.getData().getTitle());
+                case FORENAMES -> p.getName().setForenames(eP.getData().getForenames());
+                case SURNAME -> p.getName().setSurname(eP.getData().getSurname());
+                case LINE1 -> p.getAddress().setLine1(eP.getData().getLine1());
+                case LINE2 -> p.getAddress().setLine2(eP.getData().getLine2());
+                case TOWN -> p.getAddress().setTown(eP.getData().getTown());
+                case COUNTY -> p.getAddress().setCounty(eP.getData().getCounty());
+                case POSTCODE -> p.getAddress().setPostcode(eP.getData().getPostcode());
+                case DENTAL_RECALL_DATE -> p.getRecall().setDentalDate(eP.getData().getDentalRecallDate());
+                case HYGIENE_RECALL_DATE -> p.getRecall().setHygieneDate(eP.getData().getHygieneRecallDate());
+                case HYGIENE_RECALL_FREQUENCY -> p.getRecall().setHygieneFrequency(eP.getData().getHygieneRecallFrequency());
+                case DENTAL_RECALL_FREQUENCY -> p.getRecall().setDentalFrequency(eP.getData().getDentalRecallFrequency());
+                case GENDER -> p.setGender(eP.getData().getGender());
+                case PHONE1 -> p.setPhone1(eP.getData().getPhone1());
+                case PHONE2 -> p.setPhone2(eP.getData().getPhone2());
+                case DOB -> p.setDOB(eP.getData().getDOB());
+                case NOTES -> p.setNotes(eP.getData().getNotes());
+                case IS_GUARDIAN_A_PATIENT -> p.setIsGuardianAPatient(eP.getData().getIsGuardianAPatient());
+            }
+        }
+        return p;
+    }
+    private Appointment makeAppointmentFromEDSelection(){
+        Appointment appointment;
+        if (getEntityDescriptorFromView().getAppointment().getData().getKey()!=null){
+            appointment = new Appointment(getEntityDescriptorFromView().getAppointment().getData().getKey());
+        }
+        else appointment = new Appointment();
+        
+        appointment.setDuration(Duration.ofMinutes(
+                getEntityDescriptorFromView().getAppointment().getData().getDuration()));
+        appointment.setStart(getEntityDescriptorFromView().getAppointment().getData().getStart());
+        appointment.setNotes(getEntityDescriptorFromView().getAppointment().getData().getNotes());
+        appointment.setPatient(makePatientFrom(getEntityDescriptorFromView().getAppointment().getPatient()));
+        return appointment;
+    }
     private LocalDate getDay(){
         return this.day;
     }
@@ -81,80 +242,17 @@ public class AppointmentViewController extends ViewController {
         this.entityDescriptorFromView = e;
     }
 
-    public void actionPerformed(ActionEvent e){
-        setEntityDescriptorFromView(view.getEntityDescriptor());
-        switch(e.getSource().getClass().getSimpleName()){
-            case "AppointmentsForDayView" -> doAppointmentsForDayViewActions(e);
-            case "DialogForAppointmentDefinition" -> doAppointmentViewDialogActions(e);
-        }
-    }
+    
     /**
      * update old entity descriptor with previous new entity descriptor 
-     * re-initialise the new entity descriptor
+     * re-initialise the new entity descriptor, but copy over the old selected day
      */
     private void initialiseNewEntityDescriptor(){
         setOldEntityDescriptor(getNewEntityDescriptor());
         setNewEntityDescriptor(new EntityDescriptor());
+        getNewEntityDescriptor().getSelection().setDay(getOldEntityDescriptor().getSelection().getDay());
     }
-    private void doAppointmentViewDialogActions(ActionEvent e){
-        if (e.getActionCommand().equals(AppointmentViewDialogActionEvent.
-                APPOINTMENT_VIEW_CREATE_REQUEST.toString())){
-            
-        }
-        else if (e.getActionCommand().equals(AppointmentViewDialogActionEvent.
-                APPOINTMENT_VIEW_UPDATE_REQUEST.toString())){
-            
-        }
-    }
-    private void doAppointmentsForDayViewActions(ActionEvent e){
-        if (e.getActionCommand().equals(
-                AppointmentViewControllerActionEvent.
-                        APPOINTMENTS_VIEW_CLOSED.toString())){
-            ActionEvent actionEvent = new ActionEvent(
-                    this,ActionEvent.ACTION_PERFORMED,
-                    DesktopViewControllerActionEvent.VIEW_CLOSED_NOTIFICATION.toString());
-            this.myController.actionPerformed(actionEvent);
-        }
-        else if (e.getActionCommand().equals(
-            AppointmentViewControllerActionEvent.APPOINTMENTS_REQUEST.toString())){
-            setEntityDescriptorFromView(((IView)e.getSource()).getEntityDescriptor());
-            LocalDate theDay = view.getEntityDescriptor().getSelection().getDay().getData();
-            if (theDay != null){
-                try{
-                    ArrayList<Appointment> appointments = new ArrayList<>();
-                    this.appointments = 
-                        new Appointments().getAppointmentsForDayIncludingEmptyAppointmentSlots(theDay);
-                    initialiseNewEntityDescriptor();
-                    serialiseAppointmentsToEDCollection(appointments);
-                    pcEvent = pcEvent = new PropertyChangeEvent(this,
-                            AppointmentViewControllerPropertyEvent.APPOINTMENTS_RECEIVED.toString(),
-                            getOldEntityDescriptor(),getNewEntityDescriptor());
-                }
-                catch (StoreException ex){
-                //UnspecifiedError action
-                }
-            }
-        }
-        else if (e.getActionCommand().equals(AppointmentViewControllerActionEvent.APPOINTMENT_VIEW_REQUEST.toString())){
-            try{
-            Appointment appointment = new Appointment(
-                    getEntityDescriptorFromView().getSelection().
-                            getAppointment().getData().getKey()).read();
-            initialiseNewEntityDescriptor();
-            serialiseAppointmentToEDAppointment(appointment);
-            pcEvent = new PropertyChangeEvent(this,
-                    AppointmentViewControllerPropertyEvent.APPOINTMENTS_RECEIVED.toString(),
-                    getOldEntityDescriptor(),getNewEntityDescriptor());
-            
-            }
-            catch (StoreException ex){
-                //UnspecifiedError action
-            }  
-        }
-        else if (e.getActionCommand().equals(AppointmentViewControllerActionEvent.APPOINTMENT_CANCEL_REQUEST.toString())){
-            
-        }
-    }
+    
     private void serialiseAppointmentToEDAppointment(Appointment appointment){
         
     }
@@ -223,6 +321,7 @@ public class AppointmentViewController extends ViewController {
             getNewEntityDescriptor().getAppointment().getPatient().setData(appointee);
             
             getNewEntityDescriptor().getCollection().getAppointments().add(getNewEntityDescriptor().getAppointment());
+        }
     }
    
     private void serialisePatientsToEDCollection(ArrayList<Appointment> appointments) {
