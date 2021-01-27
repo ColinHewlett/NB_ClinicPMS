@@ -6,14 +6,14 @@
 package clinicpms.view;
 
 import clinicpms.view.interfaces.IView;
+import java.beans.PropertyChangeListener;
 import javax.swing.JInternalFrame;
-
 
 /**
  *
  * @author colin
  */
 public abstract class View extends JInternalFrame
-                           implements IView{
+                           implements PropertyChangeListener,IView{
 
 }

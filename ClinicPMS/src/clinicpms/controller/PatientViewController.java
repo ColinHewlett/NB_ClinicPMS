@@ -102,64 +102,20 @@ public class PatientViewController extends ViewController {
      * -- each model patient is serialised into EntityDescriptor.Patient and then
      * the EntityDescriptor.Patient added to the EntityDescriptor.Collection of
      * patients
+     * -- note, the objects the model Patient encapsulates are not included in 
+     * the serialisation
      * @throws StoreException passed up the line to caller to process
      */
     private void serialisePatientsToEDCollection(ArrayList<Patient> patients) throws StoreException{
         //fetch all patients on the system from the model
         
         getNewEntityDescriptor().getCollection().getPatients().clear();
-        /**
-         * -> [1] clear collection of patients from ED.Collection.Patients
-         * ->-> [1.1]for each patient
-         * ->->-> [1.11] initialise ED.Patient with a new instance of ED.Patient object
-         * ->->-> [1.12] render patient into ED.getPatient().setData(rendered patient)
-         * ->->-> [1.13] render guardian (patient), if it exists, into ED.getPatient().getGuardian.setData(rendered guardian)
-         * ->->-> [1.14] for each appointment in patient.getAppointmentHistory().getDentalAppointments()
-         * ->->->-> [1.141] render appointment into ED.getAppointment().setData(rendered appointment)
-         * ->->->-> [1.142] ED.getAppointment().setPatient(ED.getPatient())
-         * ->->->-> [1.143] add ED.getAppointment into ED.getPatient().getAppointmentHistory().getDentalAppointments()
-         * ->->-> [1.15] for each appointment in patient.getAppointmentHistory().getHygieneAppointments()
-         * ->->->-> [1.151] render appointment into ED.getAppointment().setData(rendered appointment)
-         * ->->->-> [1.152] ED.getAppointment().setPatient(ED.getPatient())
-         * ->->->-> [1.153] add ED.getAppointment into ED.getPatient().getAppointmentHistory().getHygieneAppointments()
-         * ->->-> [1.16] for each appointment in patient.getAppointmentHistory().getHygieneAppointments()
-         * ->->->-> [1.161] render appointment into ED.getAppointment().setData(rendered appointment)
-         * ->->->-> [1.162] ED.getAppointment().setPatient(ED.getPatient())
-         * ->->->-> [1.163] add ED.getAppointment into ED.getPatient().getAppointmentHistory().getHygieneAppointments()
-         * ->->-> [1.17] add ED.getPatient() into ED.Collection.getPatients 
-         */
         Iterator<Patient> patientsIterator = patients.iterator();
-        while(patientsIterator.hasNext()){  //[0]      
-            getNewEntityDescriptor().setPatient(new EntityDescriptor().getPatient());//[1]
+        while(patientsIterator.hasNext()){       
+            getNewEntityDescriptor().setPatient(new EntityDescriptor().getPatient());
             Patient patient = patientsIterator.next();
             RenderedPatient p = renderPatient(patient);
-            getNewEntityDescriptor().getPatient().setData(p);//[2]
-            if (patient.getIsGuardianAPatient()){
-                if (patient.getGuardian() != null){
-                    RenderedPatient g = renderPatient(patient.getGuardian());
-                    getNewEntityDescriptor().getPatient().getGuardian().setData(g);//[3]
-                }
-            }
-            Iterator<Appointment> appointmentsIterator = 
-                    patient.getAppointmentHistory().getDentalAppointments().iterator();
-            while (appointmentsIterator.hasNext()){ //[4]
-                Appointment appointment = appointmentsIterator.next();
-                RenderedAppointment a = renderAppointment(appointment);
-                getNewEntityDescriptor().getAppointment().setData(a);
-                getNewEntityDescriptor().getAppointment().setPatient(getNewEntityDescriptor().getPatient());
-                getNewEntityDescriptor().getPatient().getAppointmentHistory().getDentalAppointments()
-                        .add(getNewEntityDescriptor().getAppointment());
-            }
-            appointmentsIterator = 
-                    patient.getAppointmentHistory().getHygieneAppointments().iterator();
-            while (appointmentsIterator.hasNext()){ //[4]
-                Appointment appointment = appointmentsIterator.next();
-                RenderedAppointment a = renderAppointment(appointment);
-                getNewEntityDescriptor().getAppointment().setData(a);
-                getNewEntityDescriptor().getAppointment().setPatient(getNewEntityDescriptor().getPatient());
-                getNewEntityDescriptor().getPatient().getAppointmentHistory().getHygieneAppointments()
-                        .add(getNewEntityDescriptor().getAppointment());
-            }
+            getNewEntityDescriptor().getPatient().setData(p);
             getNewEntityDescriptor().getCollection().getPatients().add(getNewEntityDescriptor().getPatient());
         }
     }
@@ -272,10 +228,10 @@ public class PatientViewController extends ViewController {
             view = new PatientView(this, getNewEntityDescriptor());
             pcSupportForView.addPropertyChangeListener(
                     PatientViewControllerPropertyEvent.
-                            PATIENT_RECORDS_RECEIVED.toString(),view);
+                            PATIENTS_RECEIVED.toString(),view);
             pcSupportForView.addPropertyChangeListener(
                     PatientViewControllerPropertyEvent.
-                            PATIENT_RECORD_RECEIVED.toString(),view);
+                            PATIENT_RECEIVED.toString(),view);
         }
         catch (StoreException e){
             //Unspecified Error action
@@ -291,7 +247,7 @@ public class PatientViewController extends ViewController {
                 ActionEvent actionEvent = new ActionEvent(
                     this,ActionEvent.ACTION_PERFORMED,
                     DesktopViewControllerActionEvent.VIEW_CLOSED_NOTIFICATION.toString());
-                this.myController.actionPerformed(actionEvent);
+                getMyController().actionPerformed(actionEvent);
         }
         else if (e.getActionCommand().equals(
             PatientViewControllerActionEvent.PATIENT_VIEW_CREATE_REQUEST.toString())){
@@ -304,7 +260,7 @@ public class PatientViewController extends ViewController {
                     
                     pcEvent = new PropertyChangeEvent(this,
                             PatientViewControllerPropertyEvent.
-                                PATIENT_RECORD_RECEIVED.toString(),
+                                PATIENT_RECEIVED.toString(),
                             getOldEntityDescriptor(),getNewEntityDescriptor());
                     pcSupportForView.firePropertyChange(pcEvent);
                 }
@@ -328,7 +284,7 @@ public class PatientViewController extends ViewController {
                     
                     pcEvent = new PropertyChangeEvent(this,
                             PatientViewControllerPropertyEvent.
-                            PATIENT_RECORD_RECEIVED.toString(),getOldEntityDescriptor(),getNewEntityDescriptor());
+                            PATIENT_RECEIVED.toString(),getOldEntityDescriptor(),getNewEntityDescriptor());
                     pcSupportForView.firePropertyChange(pcEvent);
                 }
                 catch (StoreException ex){
@@ -340,7 +296,7 @@ public class PatientViewController extends ViewController {
             }
         }
         else if (e.getActionCommand().equals(
-                PatientViewControllerActionEvent.PATIENT_RECORDS_REQUEST.toString())){
+                PatientViewControllerActionEvent.PATIENTS_REQUEST.toString())){
             setEntityDescriptorFromView(((IView)e.getSource()).getEntityDescriptor());
             try{
                 ArrayList<Patient> patients = new Patients().getPatients();
@@ -348,27 +304,15 @@ public class PatientViewController extends ViewController {
                 serialisePatientsToEDCollection(patients);
                 pcEvent = new PropertyChangeEvent(this,
                             PatientViewControllerPropertyEvent.
-                                    PATIENT_RECORDS_RECEIVED.toString(),getOldEntityDescriptor(),getNewEntityDescriptor());
+                                    PATIENTS_RECEIVED.toString(),getOldEntityDescriptor(),getNewEntityDescriptor());
                 pcSupportForView.firePropertyChange(pcEvent);  
             }
             catch (StoreException ex){
                 //UnspecifiedError action
             }
         }
-        /* AVOIDS FETCHING PATIENT FROM STORE (performance option if needed)
         else if (e.getActionCommand().equals(
-                PatientViewControllerActionEvent.PATIENT_SELECTION.toString())){
-            setEntityDescriptorFromView(((IView)e.getSource()).getEntity());
-            setOldEntityDescriptor(getNewEntityDescriptor());
-            getNewEntityDescriptor().setPatient(getEntityDescriptorFromView().getSelection().getPatient());
-            pcEvent = new PropertyChangeEvent(this,
-                        PatientViewControllerPropertyEvent.
-                                PATIENT_RECORDS_RECEIVED.toString(),getOldEntityDescriptor(),getNewEntityDescriptor());
-            pcSupportForView.firePropertyChange(pcEvent);  
-        }
-        */
-        else if (e.getActionCommand().equals(
-                PatientViewControllerActionEvent.PATIENT_SELECTION_REQUEST.toString())){
+                PatientViewControllerActionEvent.PATIENT_REQUEST.toString())){
             setEntityDescriptorFromView(((IView)e.getSource()).getEntityDescriptor());
             setOldEntityDescriptor(getNewEntityDescriptor());
             
@@ -381,7 +325,7 @@ public class PatientViewController extends ViewController {
 
                 pcEvent = new PropertyChangeEvent(this,
                         PatientViewControllerPropertyEvent.
-                        PATIENT_RECORD_RECEIVED.toString(),getOldEntityDescriptor(),getNewEntityDescriptor());
+                        PATIENT_RECEIVED.toString(),getOldEntityDescriptor(),getNewEntityDescriptor());
                 pcSupportForView.firePropertyChange(pcEvent);
             }
             catch (StoreException ex){
@@ -401,7 +345,6 @@ public class PatientViewController extends ViewController {
             }
         }
     }
-    
     private ActionListener getMyController(){
         return this.myController;
     }

@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
  * @author colin
  */
 public class EntityDescriptor {
-
+    private enum StringRepresentation{COMPLETE, PARTIAL};
     private EntityDescriptor.Appointment appointment = null;
     private EntityDescriptor.Patient patient = null;
     private EntityDescriptor.Selection selection = null;
@@ -52,15 +52,14 @@ public class EntityDescriptor {
      * EntityDescriptor.Appointment inner class
      */
     public class Appointment {
-
         private RenderedAppointment data = null;
         private EntityDescriptor.Patient appointee = null;
-
-        protected Appointment() {
+        
+        protected Appointment(){
             data = new RenderedAppointment();
             appointee = new Patient();
         }
-
+        
         public void setData(RenderedAppointment value) {
             data = value;
         }
@@ -86,7 +85,7 @@ public class EntityDescriptor {
             DateTimeFormatter customFormatter = 
                     DateTimeFormatter.ofPattern("MM/dd/yyyy 'at' hh:mm a");
             LocalDateTime startDateTime = getData().getStart();
-            
+                
             return customFormatter.format(startDateTime);
         }
         
@@ -270,13 +269,13 @@ public class EntityDescriptor {
     public class Selection {
         private EntityDescriptor.Patient patient = null;
         private Appointment appointment = null;
-        private Day day = null;
+        private LocalDate day = null;
         private Guardian guardian = null;
 
         protected Selection() {
             appointment = new Appointment();
             patient = new EntityDescriptor.Patient();
-            day = new Day();
+            day = LocalDate.now();
         }
 
         public EntityDescriptor.Patient getPatient() {
@@ -291,84 +290,12 @@ public class EntityDescriptor {
             return appointment;
         }
         
-        public Day getDay(){
-            return day;
+        public LocalDate getDay(){
+            return this.day;
         }
         
-        public class Appointment{
-            private RenderedAppointment data = null;
-            private Patient appointee = null;
-            
-            protected Appointment(){
-                data = new RenderedAppointment();
-                appointee = new Patient();
-            }
-            
-            public void setData(RenderedAppointment value) {
-            data = value;
-            }
-
-            public RenderedAppointment getData() {
-                return data;
-            }
-            
-            public Patient getAppointee(){
-                return appointee;
-            }
-            
-            public void setAppointee(Patient value){
-                appointee = value;
-            }
-            
-            public class Patient{
-                private RenderedPatient data = null;
-                
-                protected Patient(){
-                    data = new RenderedPatient();
-                }
-                
-                public void setData(RenderedPatient value) {
-                    data = value;
-                }
-
-                public RenderedPatient getData() {
-                    return data;
-                }  
-            }
-        }
-        
-       
-        
-        public class Day {
-            private LocalDate data = null;
-            
-            protected Day(){
-                data = LocalDate.now();
-            }
-
-            public LocalDate getData() {
-                return data;
-            }
-
-            public void setData(LocalDate value) {
-                data = value;
-            }
-        }
-        
-        public class Guardian{
-            private RenderedPatient data = null;
-            
-            protected Guardian(){
-                data = new RenderedPatient();
-            }
-            
-            public void setData(RenderedPatient value) {
-                data = value;
-            }
-
-            public RenderedPatient getData() {
-                return data;
-            }
+        public void setDay(LocalDate value){
+            this.day = value;
         }
     }
     
@@ -395,7 +322,7 @@ public class EntityDescriptor {
         public ArrayList<EntityDescriptor.Patient> getPatients(){
             return patients;
         }
-        
+        /*
         public class Appointment {
             RenderedAppointment data = null;
             Patient appointee = null;
@@ -463,7 +390,7 @@ public class EntityDescriptor {
             }
             
         }
-        /*
+        
         public class Patients {
             ArrayList<EntityDescriptor.Collection.Patients.Patient> data = null;
             

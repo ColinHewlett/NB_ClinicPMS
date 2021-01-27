@@ -126,8 +126,7 @@ public class Appointments implements IAppointments{
      * @return ArrayList of Appointment objects
      * @throws StoreException 
      */
-    @Override
-    public ArrayList<Appointment> getAppointmentsForDayIncludingEmptySlots(LocalDate day) throws StoreException{
+    public ArrayList<Appointment> getAppointmentsForDayIncludingEmptyAppointmentSlots(LocalDate day) throws StoreException{
         ArrayList<Appointment> apptsForDayIncludingEmptySlots = new ArrayList<>();
         ArrayList<Appointment> appts = getAppointmentsFor(day);
         Iterator it = appts.iterator();
