@@ -524,7 +524,5 @@ public class EntityDescriptor {
         } 
         */
     }
-    private boolean gitTest(){
-        return true;
-    }
+
 }
