@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
-import javax.swing.JOptionPane;
 
 /**
  *
@@ -30,8 +29,7 @@ import javax.swing.JOptionPane;
 
 
 public class AppointmentViewController extends ViewController {
-    
-    private final String UNDEFINED_KEY_ON_UPDATE_ERROR = "Undefined key on update to an appointment";
+
     private ActionListener myController = null;
     private PropertyChangeSupport pcSupport = null;
     private AppointmentsForDayView view = null;

@@ -169,9 +169,10 @@ public class CSVStore extends Store {
      * @param a Appointment with a null key value
      * @throws StoreException if the received Appointment object does not have a 
      * null key
+     * @return Appointment, reads back from store the newly created appointment
      */
     @Override
-    public void create(Appointment a)   throws StoreException{
+    public Appointment create(Appointment a)   throws StoreException{
         List<String[]> readAppointmentsStringArrayList;
         if (a.getKey() == null){
             readAppointmentsStringArrayList = readAppointmentsAsStringArrayList();
@@ -179,6 +180,7 @@ public class CSVStore extends Store {
             a.setKey(nextAppointmentKey);
             String[] serialisedAppointment = serialise(a);
             this.csvAppointmentsWriter.writeNext(serialisedAppointment);
+            return read(a);
         }
         else{
             throw new StoreException(
