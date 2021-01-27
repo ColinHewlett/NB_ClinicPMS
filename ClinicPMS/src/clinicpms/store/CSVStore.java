@@ -152,7 +152,7 @@ public class CSVStore extends Store {
             p.setKey(nextPatientKey);
             String[] serialisedPatient = serialise(p);
             this.csvPatientsWriter.writeNext(serialisedPatient);
-            result = p;
+            return read(p);
         }
         else{
             throw new StoreException(
@@ -160,7 +160,6 @@ public class CSVStore extends Store {
                        + "expected null by CSVStore.create(Patient p) method",
                     ExceptionType.NULL_KEY_EXPECTED_EXCEPTION);
         }
-        return result;
     }
     
     /**
@@ -575,7 +574,7 @@ public class CSVStore extends Store {
     }
      
     @Override
-    public void update(Appointment a) throws StoreException{
+    public Appointment update(Appointment a) throws StoreException{
         boolean isAppointmentRecordFound = false;
         Integer key = a.getKey();
         if (key == null){
@@ -613,13 +612,14 @@ public class CSVStore extends Store {
                 this.csvAppointmentsWriter.writeAll(appointmentsStringArrayList);
                 String[] serialisedAppointment = serialise(a);
                 this.csvAppointmentsWriter.writeNext(serialisedAppointment);
+                return read(a);
             }
         }
         
     }
     
     @Override
-    public void update(Patient p) throws StoreException{
+    public Patient update(Patient p) throws StoreException{
         boolean isPatientRecordFound = false;
         Integer key = p.getKey();
         if (key == null){
@@ -657,6 +657,7 @@ public class CSVStore extends Store {
                 this.csvPatientsWriter.writeAll(patientsStringArrayList);
                 String[] serialisedPatient = serialise(p);
                 this.csvPatientsWriter.writeNext(serialisedPatient);
+                return read(p);
             }
         }
     }

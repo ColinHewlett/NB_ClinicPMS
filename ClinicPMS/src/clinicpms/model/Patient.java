@@ -95,9 +95,9 @@ public class Patient {
         return store.read(this); 
     }
     
-    public void update() throws StoreException{ 
+    public Patient update() throws StoreException{ 
         CSVStore store = CSVStore.getInstance();
-        store.update(this);
+        return store.update(this);
     }
 
     public class Name {

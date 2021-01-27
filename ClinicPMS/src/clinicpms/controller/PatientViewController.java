@@ -254,9 +254,9 @@ public class PatientViewController extends ViewController {
             Patient patient = deserialisePatientFromEDSelection();
             if (patient.getKey() == null){
                 try{
-                    Patient p = patient.create();
+                    patient = patient.create();
                     setOldEntityDescriptor(getNewEntityDescriptor());
-                    serialisePatientToEDPatient(p);
+                    serialisePatientToEDPatient(patient);
                     
                     pcEvent = new PropertyChangeEvent(this,
                             PatientViewControllerPropertyEvent.
@@ -277,10 +277,9 @@ public class PatientViewController extends ViewController {
             Patient patient = deserialisePatientFromEDSelection();
             if (patient.getKey() != null){
                 try{
-                    patient.update();
-                    Patient p = patient.read();
+                    patient = patient.update();
                     setOldEntityDescriptor(getNewEntityDescriptor());
-                    serialisePatientToEDPatient(p);
+                    serialisePatientToEDPatient(patient);
                     
                     pcEvent = new PropertyChangeEvent(this,
                             PatientViewControllerPropertyEvent.

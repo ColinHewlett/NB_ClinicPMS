@@ -79,8 +79,7 @@ public class AppointmentViewController extends ViewController {
                 APPOINTMENT_VIEW_CREATE_REQUEST.toString())){
             Appointment appointment = makeAppointmentFromEDSelection();
             try{
-                appointment.create();
-                appointment.read();
+                appointment = appointment.create();
                 initialiseNewEntityDescriptor();
                 serialiseAppointmentToEDAppointment(appointment);
                 pcEvent = pcEvent = new PropertyChangeEvent(this,
@@ -95,8 +94,7 @@ public class AppointmentViewController extends ViewController {
                 APPOINTMENT_VIEW_UPDATE_REQUEST.toString())){
             Appointment appointment = makeAppointmentFromEDSelection();
             try{
-                appointment.update();
-                appointment.read();
+                appointment = appointment.update();
             }
             catch (StoreException ex){
                 //UnspecifiedError action

@@ -36,10 +36,9 @@ public class Appointment {
         this.setKey(key);
     }
     
-    public void create() throws StoreException{
+    public Appointment create() throws StoreException{
         CSVStore store = CSVStore.getInstance();
-        store.create(this);
-        
+        return store.create(this);  
     }
     
     public void delete() throws StoreException{
@@ -52,9 +51,9 @@ public class Appointment {
         return store.read(this);
     }
     
-    public void update() throws StoreException{ 
+    public Appointment update() throws StoreException{ 
         CSVStore store = CSVStore.getInstance();
-        store.update(this);
+        return store.update(this);
     }
 
     public LocalDateTime getStart() {
