@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class EntityDescriptor {
     private enum StringRepresentation{COMPLETE, PARTIAL};
+    public enum Status{ALIVE, DEAD};
     private EntityDescriptor.Appointment appointment = null;
     private EntityDescriptor.Patient patient = null;
     private EntityDescriptor.Selection selection = null;
@@ -54,29 +55,34 @@ public class EntityDescriptor {
     public class Appointment {
         private RenderedAppointment data = null;
         private EntityDescriptor.Patient appointee = null;
+        private Status appointmentState = Status.DEAD;
         
         protected Appointment(){
             data = new RenderedAppointment();
             appointee = new Patient();
         }
         
-        public void setData(RenderedAppointment value) {
+        public Status getStatus(){
+            return this.appointmentState;
+        } 
+        
+        public void setStatus(Status value){
+            this.appointmentState = value;
+        }
+        
+        protected void setData(RenderedAppointment value) {
             data = value;
         }
 
         public RenderedAppointment getData() {
             return data;
         }
-        
-        public boolean isKeyDefined(){
-            return false;
-        }
-        
+
         public Patient getPatient(){
             return appointee;
         }
         
-        public void setPatient(EntityDescriptor.Patient value){
+        protected void setPatient(EntityDescriptor.Patient value){
             appointee = value;
         }
         
@@ -127,11 +133,20 @@ public class EntityDescriptor {
         private RenderedPatient data = null;
         private Patient guardian = null;
         private AppointmentHistory appointmentHistory = null;
+        private Status patientState = Status.DEAD;
 
         protected Patient() {
             data = new RenderedPatient();
             patient = new Patient();
             appointmentHistory = new AppointmentHistory();
+        }
+        
+        public Status getStatus(){
+            return this.patientState;
+        } 
+        
+        public void setStatus(Status value){
+            this.patientState = value;
         }
         
         public AppointmentHistory getAppointmentHistory(){
@@ -200,7 +215,7 @@ public class EntityDescriptor {
             }
         } 
 
-        public void setData(RenderedPatient value) {
+        protected void setData(RenderedPatient value) {
             data = value;
         }
 
@@ -208,25 +223,19 @@ public class EntityDescriptor {
             return data;
         }
         
-        public boolean isKeyDefined(){//view might want to know
-            return getData().getKey()!=null;
-        }
-        
         public Patient getGuardian(){
             return guardian;
         }
         
-        public void setGuardian(Patient value){
+        protected void setGuardian(Patient value){
             guardian = value;
         }
-        
-        
-        
+
         public class AppointmentHistory{
             private ArrayList<EntityDescriptor.Appointment> dentalAppointments = null;
             private ArrayList<EntityDescriptor.Appointment> hygieneAppointments = null;
         
-            public AppointmentHistory(){
+            protected AppointmentHistory(){
                 dentalAppointments = new ArrayList<EntityDescriptor.Appointment>();
                 hygieneAppointments = new ArrayList<EntityDescriptor.Appointment>();
             }
@@ -234,7 +243,7 @@ public class EntityDescriptor {
                 return dentalAppointments;
             }
             
-            public void setDentalAppointments(ArrayList<EntityDescriptor.Appointment> value){
+            protected void setDentalAppointments(ArrayList<EntityDescriptor.Appointment> value){
                 dentalAppointments = value;
             }
 
@@ -242,28 +251,10 @@ public class EntityDescriptor {
                 return hygieneAppointments;
             }
 
-            public void setHygieneAppointments(ArrayList<EntityDescriptor.Appointment> value){
+            protected void setHygieneAppointments(ArrayList<EntityDescriptor.Appointment> value){
                 hygieneAppointments = value;
             }
         }
-        
-        /*
-        public class Guardian {
-            private RenderedPatient data = null;
-            
-            protected Guardian(){
-                data = new RenderedPatient();
-            }
-            
-            public void setData(RenderedPatient value) {
-            data = value;
-            }
-
-            public RenderedPatient getData() {
-                return data;
-            }  
-        }
-        */
     }
     
     public class Selection {
@@ -288,6 +279,10 @@ public class EntityDescriptor {
         
         public Appointment getAppointment() {
             return appointment;
+        }
+        
+        public void setAppointment(EntityDescriptor.Appointment value){
+            appointment = value;
         }
         
         public LocalDate getDay(){

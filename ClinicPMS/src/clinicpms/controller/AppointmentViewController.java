@@ -15,10 +15,12 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeSupport;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 
@@ -60,6 +62,7 @@ public class AppointmentViewController extends ViewController {
         getNewEntityDescriptor().getSelection().setDay(LocalDate.now());
         try{
             getAppointmentsForSelectedDay();
+            this.view = new AppointmentsForDayView(this, getNewEntityDescriptor());
         }
         catch (StoreException e){
            //UnpsecifiedError action 
@@ -101,15 +104,25 @@ public class AppointmentViewController extends ViewController {
             }
             initialiseNewEntityDescriptor();
             serialiseAppointmentToEDAppointment(appointment);
-            pcEvent = pcEvent = new PropertyChangeEvent(this,
+            pcEvent = new PropertyChangeEvent(this,
                     AppointmentViewDialogPropertyEvent.APPOINTMENT_RECEIVED.toString(),
                     getOldEntityDescriptor(),getNewEntityDescriptor());
+        }
+        else if (e.getActionCommand().equals(
+                AppointmentViewDialogActionEvent.APPOINTMENT_VIEW_CLOSE_REQUEST.toString())){
+            if (e.getSource() instanceof JFrame){
+                dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                dialog.dispatchEvent(new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING));
+            }
         }
     }
     private void doAppointmentsForDayViewActions(ActionEvent e){
         if (e.getActionCommand().equals(
                 AppointmentViewControllerActionEvent.
                         APPOINTMENTS_VIEW_CLOSED.toString())){
+            /**
+             * APPOINTMENTS_VIEW_CLOSED
+             */
             ActionEvent actionEvent = new ActionEvent(
                     this,ActionEvent.ACTION_PERFORMED,
                     DesktopViewControllerActionEvent.VIEW_CLOSED_NOTIFICATION.toString());
@@ -167,9 +180,10 @@ public class AppointmentViewController extends ViewController {
                 new Appointments().getAppointmentsForDayIncludingEmptyAppointmentSlots(theDay);
             initialiseNewEntityDescriptor();
             serialiseAppointmentsToEDCollection(appointments);
+            /*
             pcEvent = pcEvent = new PropertyChangeEvent(this,
                     AppointmentViewControllerPropertyEvent.APPOINTMENTS_RECEIVED.toString(),
-                    getOldEntityDescriptor(),getNewEntityDescriptor());
+                    getOldEntityDescriptor(),getNewEntityDescriptor());*/
         }
     }
     private Patient makePatientFrom(EntityDescriptor.Patient eP){

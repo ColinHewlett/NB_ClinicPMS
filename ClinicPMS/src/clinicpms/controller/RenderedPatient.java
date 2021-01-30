@@ -36,12 +36,20 @@ public class RenderedPatient {
     private RenderedAppointment lastHygieneAppointment = null;
     private RenderedAppointment nextDentalAppointment = null;
     private RenderedAppointment nextHygieneAppointment = null;
+    private boolean isKeyDefined = false;
     
     protected Integer getKey(){
         return key;
     }
     protected void setKey(Integer value){
         key = value;
+    }
+    
+    public boolean getIsKeyDefined(){
+        return this.isKeyDefined;
+    }
+    protected void setIsKeyDefined(boolean value){
+        this.isKeyDefined = value;
     }
     
     public String getTitle(){

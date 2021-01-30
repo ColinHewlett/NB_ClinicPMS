@@ -5,6 +5,7 @@
  */
 package clinicpms.controller;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 /**
  *
@@ -13,15 +14,22 @@ import java.time.LocalDateTime;
 public class RenderedAppointment {
     private Integer key = null;
     private LocalDateTime start = null;
-    private long duration;
+    private Duration duration = null;
     private String notes = null;
+    private boolean isKeyDefined = false;
     
     protected Integer getKey(){
         return key;
     }
-    
     protected void setKey(Integer value){
         key = value;
+    }
+    
+    public boolean getIsKeyDefined(){
+        return this.isKeyDefined;
+    }
+    protected void setIsKeyDefined(boolean value){
+        this.isKeyDefined = value;
     }
     
     public LocalDateTime getStart(){
@@ -32,11 +40,11 @@ public class RenderedAppointment {
         start = value;
     }
     
-    public long getDuration(){
+    public Duration getDuration(){
         return duration;
     } 
     
-    public void setDuration(long value){
+    public void setDuration(Duration value){
         duration = value;
     }
     
