@@ -15,13 +15,14 @@ import java.time.Duration;
  * @author colin
  */
 public class Appointment {
-
+    public static enum Status{BOOKED,UNBOOKED};
     private Integer key = null;
     private LocalDateTime start = null;
     private Duration duration  = null;
     private String notes = null;
     private Patient patient = null;
     private Category category = null;
+    private Status status = Status.BOOKED;
     
     public static enum Category{DENTAL, HYGIENE, ALL}
 
@@ -33,13 +34,12 @@ public class Appointment {
      * @param key 
      */
     public Appointment( int key) {
-        this.setKey(key);
+        this.key = key;
     }
     
-    public void create() throws StoreException{
+    public Appointment create() throws StoreException{
         CSVStore store = CSVStore.getInstance();
-        store.create(this);
-        
+        return store.create(this);  
     }
     
     public void delete() throws StoreException{
@@ -52,9 +52,9 @@ public class Appointment {
         return store.read(this);
     }
     
-    public void update() throws StoreException{ 
+    public Appointment update() throws StoreException{ 
         CSVStore store = CSVStore.getInstance();
-        store.update(this);
+        return store.update(this);
     }
 
     public LocalDateTime getStart() {
@@ -84,6 +84,12 @@ public class Appointment {
     public void setKey(Integer key) {
         this.key = key;
     }
+    public Status getStatus(){
+        return this.status;
+    }
+    public void setStatus(Status value){
+        this.status = value;
+    }       
 
     public Patient getPatient() {
         return patient;

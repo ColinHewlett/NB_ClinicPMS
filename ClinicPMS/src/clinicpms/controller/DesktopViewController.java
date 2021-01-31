@@ -7,13 +7,8 @@ package clinicpms.controller;
 
 import clinicpms.view.DesktopView;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.beans.PropertyVetoException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import javax.swing.JFrame;
 import javax.swing.JInternalFrame; 
 import javax.swing.JOptionPane;
 
@@ -49,16 +44,6 @@ public class DesktopViewController extends ViewController{
         
         appointmentViewControllers = new ArrayList<>();
         patientViewControllers = new ArrayList<>();
-        
-        /*
-        viewControllers = new HashMap<ViewControllers,ArrayList<ViewController>>();
-        viewControllers.put(
-                ViewControllers.APPOINTMENT_VIEW_CONTROLLER,
-                                        appointmentViewControllers);
-        viewControllers.put(
-                ViewControllers.PATIENT_VIEW_CONTROLLER,
-                                        patientViewControllers);#
-        */
     }
     
     @Override
@@ -124,7 +109,6 @@ public class DesktopViewController extends ViewController{
      * @param e source of event is DesktopView object
      */
     private void doDesktopViewAction(ActionEvent e){  
-        JInternalFrame requestedView = null;
         if(e.getActionCommand().equals(
                 ViewController.DesktopViewControllerActionEvent.VIEW_CLOSE_REQUEST.toString())){
             isAppointmentViewControllerActive = (appointmentViewControllers.size() > 0);
@@ -132,7 +116,7 @@ public class DesktopViewController extends ViewController{
             String[] options = {"Yes", "No"};
             String message;
             if (isAppointmentViewControllerActive||isPatientViewControllerActive){
-                message = "At least a patient or appointments view is active. Close application anyway?";
+                message = "At least one patient or appointment view is active. Close application anyway?";
             }
             else message = "Close application?";
             int close = JOptionPane.showOptionDialog(getView(),
@@ -152,16 +136,16 @@ public class DesktopViewController extends ViewController{
                     DESKTOP_VIEW_APPOINTMENTS_REQUEST.toString())){
             appointmentViewControllers.add(
                                     new AppointmentViewController(this, getView()));
-            requestedView = (JInternalFrame)appointmentViewControllers.get(
-                    appointmentViewControllers.size()-1).getView();
+            appointmentViewControllers.get(appointmentViewControllers.size()-1).
+                    getView().setContentPane(this.getView());
         }
         else if (e.getActionCommand().equals(
             ViewController.DesktopViewControllerActionEvent.
                     DESKTOP_VIEW_PATIENTS_REQUEST.toString())){
             patientViewControllers.add(
                                     new PatientViewController(this, getView()));
-            requestedView = (JInternalFrame)patientViewControllers.get(
-                    patientViewControllers.size()-1).getView();
+            patientViewControllers.get(patientViewControllers.size()-1).
+                    getView().setContentPane(this.getView());
         } 
         /**
          * user has attempted to close the desktop view

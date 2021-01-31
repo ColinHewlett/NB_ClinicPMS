@@ -152,7 +152,7 @@ public class CSVStore extends Store {
             p.setKey(nextPatientKey);
             String[] serialisedPatient = serialise(p);
             this.csvPatientsWriter.writeNext(serialisedPatient);
-            result = p;
+            return read(p);
         }
         else{
             throw new StoreException(
@@ -160,7 +160,6 @@ public class CSVStore extends Store {
                        + "expected null by CSVStore.create(Patient p) method",
                     ExceptionType.NULL_KEY_EXPECTED_EXCEPTION);
         }
-        return result;
     }
     
     /**
@@ -169,9 +168,10 @@ public class CSVStore extends Store {
      * @param a Appointment with a null key value
      * @throws StoreException if the received Appointment object does not have a 
      * null key
+     * @return Appointment, reads back from store the newly created appointment
      */
     @Override
-    public void create(Appointment a)   throws StoreException{
+    public Appointment create(Appointment a)   throws StoreException{
         List<String[]> readAppointmentsStringArrayList;
         if (a.getKey() == null){
             readAppointmentsStringArrayList = readAppointmentsAsStringArrayList();
@@ -179,6 +179,7 @@ public class CSVStore extends Store {
             a.setKey(nextAppointmentKey);
             String[] serialisedAppointment = serialise(a);
             this.csvAppointmentsWriter.writeNext(serialisedAppointment);
+            return read(a);
         }
         else{
             throw new StoreException(
@@ -573,7 +574,7 @@ public class CSVStore extends Store {
     }
      
     @Override
-    public void update(Appointment a) throws StoreException{
+    public Appointment update(Appointment a) throws StoreException{
         boolean isAppointmentRecordFound = false;
         Integer key = a.getKey();
         if (key == null){
@@ -611,13 +612,14 @@ public class CSVStore extends Store {
                 this.csvAppointmentsWriter.writeAll(appointmentsStringArrayList);
                 String[] serialisedAppointment = serialise(a);
                 this.csvAppointmentsWriter.writeNext(serialisedAppointment);
+                return read(a);
             }
         }
         
     }
     
     @Override
-    public void update(Patient p) throws StoreException{
+    public Patient update(Patient p) throws StoreException{
         boolean isPatientRecordFound = false;
         Integer key = p.getKey();
         if (key == null){
@@ -655,6 +657,7 @@ public class CSVStore extends Store {
                 this.csvPatientsWriter.writeAll(patientsStringArrayList);
                 String[] serialisedPatient = serialise(p);
                 this.csvPatientsWriter.writeNext(serialisedPatient);
+                return read(p);
             }
         }
     }

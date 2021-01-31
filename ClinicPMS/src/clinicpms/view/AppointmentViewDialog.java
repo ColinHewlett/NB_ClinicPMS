@@ -6,7 +6,6 @@
 package clinicpms.view;
 
 import clinicpms.controller.EntityDescriptor;
-import clinicpms.controller.RenderedPatient;
 import clinicpms.controller.ViewController;
 import clinicpms.view.interfaces.IView;
 import java.awt.event.ActionEvent;
@@ -14,13 +13,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyVetoException;
 import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -33,7 +31,7 @@ import javax.swing.JOptionPane;
  * @author colin
  */
 public class AppointmentViewDialog extends javax.swing.JDialog 
-                                            implements IView,PropertyChangeListener{
+                                   implements IView,PropertyChangeListener{
     private EntityDescriptor entityDescriptor = null;
     private ActionListener myController = null;
     private ViewController.ViewMode viewMode = null;
@@ -128,7 +126,7 @@ public class AppointmentViewDialog extends javax.swing.JDialog
      * On entry to listener 
      * -> if dialog default closing behaviour is DO_NOTHING_ON_CLOSE, which is configured during dialog construction, user is prompted to confirm the closing of dialog
      * ->-> on receipt of user confirmation an APPOINTMENT_VIEW_CLOSE_REQUEST action event is sent to the view controller
-     * Its is the responsibility of the view controller to re-configure the dialog to DISPOSE_ON_CLOSE, and then despatch a WINDOW_CLOSING  event 
+     * Its the responsibility of the view controller to re-configure the dialog to DISPOSE_ON_CLOSE, and then despatch a WINDOW_CLOSING  event 
      * 
      */
     private void initialiseDialogClosing(){
@@ -149,15 +147,19 @@ public class AppointmentViewDialog extends javax.swing.JDialog
             }
         });
     }
-    private void initialiseEntityDescriptorfromView(){
-        getEntityDescriptor().getSelection().getAppointment().setAppointee((EntityDescriptor.Patient)this.cmbSelectPatient.getSelectedItem());
-        getEntityDescriptor().getSelection().getAppointment().getData().setStart(getStartDateTime());
-        getEntityDescriptor().getSelection().getAppointment().getData().setDuration(getDurationFromView());
-        getEntityDescriptor().getSelection().getAppointment().getData().setNotes(this.txtNotes.getText());
+    private void initialiseEntityDescriptorFromView(){
+        getEntityDescriptor().getSelection().setAppointee(
+                (EntityDescriptor.Patient)this.cmbSelectPatient.getSelectedItem());
+        getEntityDescriptor().getSelection().getAppointment().getData().
+                setStart(getStartDateTime());
+        getEntityDescriptor().getSelection().getAppointment().getData().
+                setDuration(Duration.ofMinutes(getDurationFromView()));
+        getEntityDescriptor().getSelection().getAppointment().getData().
+                setNotes(this.txtNotes.getText());
     }
     private LocalDateTime getStartDateTime(){
-        return getEntityDescriptor().getSelection().getDay().getData().
-                atTime((int)this.spnDurationHours.getValue(),(int)this.spnDurationMinutes.getValue());
+        return getEntityDescriptor().getSelection().getDay().atTime(
+                (int)this.spnDurationHours.getValue(),(int)this.spnDurationMinutes.getValue());
     }
     private long getDurationFromView(){
         return ((int)this.spnDurationHours.getValue() * 60) + 
@@ -169,11 +171,13 @@ public class AppointmentViewDialog extends javax.swing.JDialog
     private void initialiseViewFromED(){
         DateTimeFormatter hhmmFormat = DateTimeFormatter.ofPattern("HH:mm");
         this.spnStartTime.setValue(getEntityDescriptor().getAppointment().getData().getStart().format(hhmmFormat)); 
-        this.spnDurationHours.setValue(getHoursFromDuration(getEntityDescriptor().getAppointment().getData().getDuration()));
-        this.spnDurationMinutes.setValue(getMinutesFromDuration(getEntityDescriptor().getAppointment().getData().getDuration()));
+        this.spnDurationHours.setValue(getHoursFromDuration(getEntityDescriptor().getAppointment().getData().getDuration().toMinutes()));
+        this.spnDurationMinutes.setValue(getMinutesFromDuration(getEntityDescriptor().getAppointment().getData().getDuration().toMinutes()));
         this.txtNotes.setText(getEntityDescriptor().getAppointment().getData().getNotes());
         populatePatientSelector(this.cmbSelectPatient);
-        this.cmbSelectPatient.setSelectedItem(getEntityDescriptor().getAppointment().getPatient());
+        if (!getEntityDescriptor().getAppointment().getData().IsEmptySlot()){
+            this.cmbSelectPatient.setSelectedItem(getEntityDescriptor().getAppointment().getPatient());
+        }
     }
     private Integer getHoursFromDuration(long duration){
         return (int)duration / 60;
@@ -436,7 +440,6 @@ public class AppointmentViewDialog extends javax.swing.JDialog
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
         this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
     }//GEN-LAST:event_btnCancelActionPerformed
-
     private void btnCreateUpdateAppointmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreateUpdateAppointmentActionPerformed
         initialiseEntityDescriptorFromView();
     }//GEN-LAST:event_btnCreateUpdateAppointmentActionPerformed

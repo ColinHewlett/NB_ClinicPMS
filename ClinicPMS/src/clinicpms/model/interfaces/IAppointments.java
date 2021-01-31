@@ -18,7 +18,6 @@ public interface IAppointments {
 
     public ArrayList<Appointment> getAppointmentsFor(LocalDate day) throws StoreException;
     public ArrayList<Appointment> getAppointmentsFor(Patient p,Category c ) throws StoreException;
-    public ArrayList<Appointment> getAppointmentsForDayIncludingEmptySlots(LocalDate day) throws StoreException;
     public Appointment getLastDentalAppointmentFor(Patient p) throws StoreException;
     public Appointment getNextDentalAppointmentFor(Patient p) throws StoreException;
     public Appointment getLastHygieneAppointmentFor(Patient p) throws StoreException;

@@ -11,24 +11,22 @@ import clinicpms.view.interfaces.IView;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.optionalusertools.DateChangeListener;
 import com.github.lgooddatepicker.zinternaltools.DateChangeEvent;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import javax.swing.*;
-import javax.swing.table.TableModel;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.DefaultTableColumnModel;
-import java.time.LocalDateTime;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.beans.PropertyVetoException;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import java.time.Duration;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 
 /**
  *
@@ -39,16 +37,16 @@ public class AppointmentsForDayView extends View{
     private final int DURATION_COLUMN = 1;
     private final int PATIENT_COLUMN = 2;
     private final int NOTES_COLUMN = 3;
-
+    private enum COLUMN{From,Duration,Patient,Notes};
     private JTable tblAppointmentsForDay = null;
     private DefaultTableModel model = null; 
-    private Object headers[] = {"From","Duration","Patient","Notes"};
     private Object source = null;
     private ArrayList<Integer> appointmentKeys = null;
     private ArrayList<Integer> patientKeys = null;
     private ActionListener myController = null;
     private String day = null;
     private IView view = null;
+    private AppointmentsTableModel tableModel = null;
     
     //state variables which support IAppointView interface
     private String key = null;
@@ -56,8 +54,8 @@ public class AppointmentsForDayView extends View{
     private String duration = null;
     private String notes = null;
     private EntityDescriptor entityDescriptor = null;
-    private HashMap<String,String> patientEntityValues = null;
     private DateTimeFormatter dmyFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private DateTimeFormatter hhmm12Format = DateTimeFormatter.ofPattern("HH:mm a");
     //state variables which support IPatientShortData interface
     private String guardianKey = null;
 
@@ -72,163 +70,65 @@ public class AppointmentsForDayView extends View{
         if (propertyName.equals(ViewController.AppointmentViewControllerPropertyEvent.APPOINTMENTS_RECEIVED.toString())){
             setEntityDescriptor((EntityDescriptor)e.getNewValue());
             initialiseViewFromEDCollection();
-            doRefreshView((ArrayList<HashMap<String,String>>)e.getNewValue());
         }
-        if (propertyName.equals(ViewController.AppointmentViewControllerPropertyEvent.APPOINTMENT_RECEIVED.toString())){
-            setPatientEntityValues((HashMap<String,String>)e.getNewValue());
-        }
+    }
+    public EntityDescriptor getEntityDescriptor(){
+        return this.entityDescriptor;
+    }
+    private void setEntityDescriptor(EntityDescriptor value){
+        this.entityDescriptor = value;
+    }   
+    private AppointmentsTableModel getTableModel(){
+        return this.tableModel;
+    }
+    private void setTableModel(AppointmentsTableModel value){
+        this.tableModel = value;
     }
     private void initialiseViewFromEDCollection(){
-        
+        ArrayList<EntityDescriptor.Appointment> appointments = 
+                getEntityDescriptor().getCollection().getAppointments();
+        AppointmentsTableModel model = new AppointmentsTableModel(appointments);
+        this.tblAppointmentsForDay.setModel(model);
     }
-    
-    private void setPatientEntityValues(HashMap<String,String> patientEntityValues){
-        this.patientEntityValues = patientEntityValues;
-    }
-    private HashMap<PatientFields,String> getPatientEntityValues(){
-        return this.patientEntityValues;
-    }
-    private String getPatientName(){
-        String name = null;
-        HashMap<String,String> patient = getPatientEntityValues();
-   
-        if (patient.get("Title") != null){
-            name = patient.get("Title") + " ";
+    private void initialiseEDSelectionFromView(int row){
+        if (row > -1){
+            getEntityDescriptor().getSelection().setAppointment(
+                    getEntityDescriptor().getCollection().getAppointments().get(row));
         }
-        if (patient.get("Forenames") != null){
-            name = patient.get("Forenames") + " ";
-        }
-        if (patient.get("Surname") != null){
-            name = patient.get("Surname");
-        }
-        return name;                                  
-    }
-
-    private void doRefreshView(ArrayList<HashMap<String,String>> appointments){
-        HashMap<String,String> appointment;
-        removeTableRows();
-        Iterator<HashMap<String,String>> it = appointments.iterator();
-        while (it.hasNext()){
-            appointment = it.next();
-            addTableRow(appointment);
-        }
-    }
-    
-    private void addTableRow(HashMap<String,String> appointment){
-        String patientKey = null;
-        for (int i = 0;i < ClinicPMS.APPOINTMENT_COLUMNS.length; i++){
-            /**
-             * if this is the patient (key) need to get patient's name
-             */
-            if (ClinicPMS.APPOINTMENT_COLUMNS[i].equals("Patient")){
-                if (appointment.get(ClinicPMS.APPOINTMENT_COLUMNS[i]) != null){
-                    patientKey = appointment.get(ClinicPMS.APPOINTMENT_COLUMNS[i]);
-                    requestPatientDetailsForThisPatient(patientKey);  
-                }
-            }
-            
-        }
-        Object[] row = {getPatientName(), 
-                        appointment.get("Start"), // "HH:mm
-                        renderDuration(appointment.get("Duration")), //minutes
-                        appointment.get(notes)}; 
-  
-        model.addRow(row);
-    }
-    
-    private void removeTableRows(){
-        if (tblAppointmentsForDay.getRowCount() > 0){
-            for (int i = tblAppointmentsForDay.getRowCount()-1; i == 0; i--){
-                model.removeRow(i);
-            }
-        }
-    }
-    
-    private void requestPatientDetailsForThisPatient(String key){
-        HashMap<String,String> entity = null;
-        for(int i = 0; i < ClinicPMS.PATIENT_COLUMNS.length; i++){
-            entity.put(ClinicPMS.PATIENT_COLUMNS[i], null);
-        }
-        entity.put("Key", key);
-        entity.put("Entity", "patient");
-
-        getMyController().actionPerformed(new ActionEvent(
-                        this,
-                        ActionEvent.ACTION_PERFORMED,
-                        ClinicPMS.PATIENT_RECORD_REQUEST));
-    } 
-
-    /**
-     * On entry a new row is added to the table and the appointment key value
-     * is added to the 'appointmentKeys' ArrayList<Integer> collection
-     * @param o Object which is cast to an Integer and represents this 
-     * appointment's key value
-     */
-    private void doShowAppointment(Object o){
-        //add empty row
-        model.addRow(new Vector());
-        //add appointment key to collection
-        appointmentKeys.add((Integer)o);    
-    }
-    
-    /**
-     * 
-     * @param o is a LocalDateTimePicker object from which all is required
-     * is the time component (as a string?)
-     */
-    private void doShowStart(Object o){
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        LocalDateTime time = (LocalDateTime)o;
-        String the_time = time.format(formatter);
-        model.setValueAt(the_time, model.getRowCount()-1,START_COLUMN);
-    }
-    
-    /**
-     * 
-     * @param o is a Duration object which is formatted as minutes if less than
-     * or equal to 90 mins, else as hour(s) and minutes
-     */
-    private String renderDuration(String s){
-        String interval = null;
-        Integer minutes = Integer.parseInt(s);
-        Integer hours = minutes.intValue()/60;
-        if (minutes.intValue() > 90){
-            if ((minutes.intValue()/60) == 1){
-                interval = "1 hour";
-            }
-            else {
-                hours = minutes.intValue()/60;
-                interval = hours + " hours";
-            } 
-            if (minutes.intValue() % 60 > 0){
-                interval = interval + " " + minutes.toString() + " minutes";
-            }
-        }
-        else {
-            interval = minutes.toString() + " minutes";  
-        }
-        return interval;
-    }
-    
-    /**
-     * 
-     * @param o is String object
-     */
-    private void doShowNotes(Object o){
-        model.setValueAt((String)o, model.getRowCount()-1,NOTES_COLUMN);
-        
     }
 
     /**
      * Creates new form AppointmentsForDayViewController
      */
-    public AppointmentsForDayView(ActionListener controller) {
+    public AppointmentsForDayView(ActionListener controller, EntityDescriptor ed) {
         this.setVisible(true);
         this.setTitle("Appointments");
-        
+        this.setEntityDescriptor(ed);
         setView(this);
         initComponents();
-        //add window management controls
+        /**
+         * Establish an InternalFrameListener for when the view is closed 
+         */
+        new InternalFrameAdapter(){
+            @Override  
+            public void internalFrameClosed(InternalFrameEvent e) {
+                ActionEvent actionEvent = new ActionEvent(
+                        this,ActionEvent.ACTION_PERFORMED,
+                        ViewController.DesktopViewControllerActionEvent.VIEW_CLOSED_NOTIFICATION.toString());
+                getMyController().actionPerformed(actionEvent);
+            }
+        };
+        
+        this.tblAppointmentsForDay = new JTable();
+        this.scrAppointmentsForDayTable.add(this.tblAppointmentsForDay);
+        this.tblAppointmentsForDay.setDefaultRenderer(LocalDateTime.class, new AppointmentsTableLocalDateTimeRenderer());
+        this.tblAppointmentsForDay.setDefaultRenderer(Duration.class, new AppointmentsTableDurationRenderer());
+        this.tblAppointmentsForDay.setDefaultRenderer(EntityDescriptor.Patient.class, new AppointmentsTablePatientRenderer());
+        this.tblAppointmentsForDay.getColumnModel().getColumn(COLUMN.From.ordinal()).setPreferredWidth(40);
+        this.tblAppointmentsForDay.getColumnModel().getColumn(COLUMN.Duration.ordinal()).setPreferredWidth(40);
+        this.tblAppointmentsForDay.getColumnModel().getColumn(COLUMN.Patient.ordinal()).setPreferredWidth(150);
+        this.tblAppointmentsForDay.getColumnModel().getColumn(COLUMN.Notes.ordinal()).setPreferredWidth(350);
+        this.initialiseViewFromEDCollection();
         
         DatePicker appointmentDayPicker = new DatePicker();
         appointmentDayPicker.addDateChangeListener(new AppointmentsForDayView.AppointmentDayDateChangeListener());
@@ -243,91 +143,13 @@ public class AppointmentsForDayView extends View{
                 appointmentDayPicker.openPopup();
             }
         });
-        
-        
-        
+
         this.setClosable(true);
         this.setMaximizable(true);
         this.setIconifiable(true);
         this.setResizable(true);
-        //JTable tblAppointsmentsForDay = new JTable(null, headers);
-        //JTableHeader header = this.tblAppointmentsForDay.getTableHeader();
-        
-        //tblAppointsmentsForDay.setVisible(true);
-        
-        TableModel model = new DefaultTableModel();
-
-        TableColumnModel columnModel = new DefaultTableColumnModel();
-        TableColumn firstColumn = new TableColumn(0);
-        firstColumn.setHeaderValue(headers[0]);
-        columnModel.addColumn(firstColumn);
-
-        TableColumn secondColumn = new TableColumn(0);
-        secondColumn.setHeaderValue(headers[1]);
-        columnModel.addColumn(secondColumn);
-
-        TableColumn thirdColumn = new TableColumn(0);
-        thirdColumn.setHeaderValue(headers[2]);
-        columnModel.addColumn(thirdColumn);
-        
-        TableColumn fourthColumn = new TableColumn(0);
-        fourthColumn.setHeaderValue(headers[3]);
-        columnModel.addColumn(fourthColumn);
-
-        JTable tblAppointmentsForDay = new JTable(model, columnModel);
-        scrAppointmentsForDayTable.setViewportView(tblAppointmentsForDay);
-        
-        //configure column headers of table
-        tblAppointmentsForDay.getColumnModel()
-                .getColumn(0)
-                .setHeaderRenderer(new MyCellRenderer());
-        tblAppointmentsForDay.getColumnModel()
-                .getColumn(1)
-                .setHeaderRenderer(new MyCellRenderer());
-        tblAppointmentsForDay.getColumnModel()
-                .getColumn(2)
-                .setHeaderRenderer(new MyCellRenderer());
-        tblAppointmentsForDay.getColumnModel()
-                .getColumn(3)
-                .setHeaderRenderer(new MyCellRenderer());
-        
-        tblAppointmentsForDay.getColumnModel().getColumn(0).setPreferredWidth(40);
-        tblAppointmentsForDay.getColumnModel().getColumn(1).setPreferredWidth(40);
-        tblAppointmentsForDay.getColumnModel().getColumn(2).setPreferredWidth(150);
-        tblAppointmentsForDay.getColumnModel().getColumn(3).setPreferredWidth(350);
-    
-        model = (DefaultTableModel)tblAppointmentsForDay.getModel();
-   
+ 
     }
-    
-    /**********************************************
-     *             IView implementation           *
-     **********************************************
-     */
-    
-    /**
-     * Method sends a message to its controller to send it the appointments data
-     * for the day (in start up this will be today's date)
-     */
-    public void initialiseView(){
-        ActionEvent e = new ActionEvent(getMyController(),
-                                        ActionEvent.ACTION_PERFORMED,
-                                        ClinicPMS.APPOINTMENTS_FOR_DAY);
-        getMyController().actionPerformed(e);
-    }
-    
-    public void close(){
-        
-    }
-
-    public EntityDescriptor getEntityDescriptor(){
-        return this.entityDescriptor;
-    }
-    
-    private void setEntityDescriptor (EntityDescriptor value){
-        this.entityDescriptor = value;
-    }
-    
     private ActionListener getMyController(){
         return myController;
     }
@@ -405,6 +227,7 @@ public class AppointmentsForDayView extends View{
         jLabel1 = new javax.swing.JLabel();
         btnCreateAppointment = new javax.swing.JButton();
         btnUpdateAppointment = new javax.swing.JButton();
+        btnCloseView = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -427,6 +250,13 @@ public class AppointmentsForDayView extends View{
             }
         });
 
+        btnCloseView.setText("Close view");
+        btnCloseView.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCloseViewActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout pnlControlsLayout = new javax.swing.GroupLayout(pnlControls);
         pnlControls.setLayout(pnlControlsLayout);
         pnlControlsLayout.setHorizontalGroup(
@@ -436,11 +266,13 @@ public class AppointmentsForDayView extends View{
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtAppointmentDay, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 158, Short.MAX_VALUE)
-                .addComponent(btnCreateAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnUpdateAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(9, 9, 9))
+                .addGap(30, 30, 30)
+                .addComponent(btnCreateAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30)
+                .addComponent(btnUpdateAppointment)
+                .addGap(30, 30, 30)
+                .addComponent(btnCloseView)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         pnlControlsLayout.setVerticalGroup(
             pnlControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -449,8 +281,9 @@ public class AppointmentsForDayView extends View{
                 .addGroup(pnlControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(txtAppointmentDay, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnCreateAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnUpdateAppointment))
+                    .addComponent(btnCreateAppointment)
+                    .addComponent(btnUpdateAppointment)
+                    .addComponent(btnCloseView))
                 .addGap(2, 2, 2))
         );
 
@@ -474,30 +307,50 @@ public class AppointmentsForDayView extends View{
             .addGroup(layout.createSequentialGroup()
                 .addComponent(pnlControls, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(scrAppointmentsForDayTable, javax.swing.GroupLayout.PREFERRED_SIZE, 267, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(scrAppointmentsForDayTable, javax.swing.GroupLayout.PREFERRED_SIZE, 267, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnCreateAppointmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreateAppointmentActionPerformed
-        ActionEvent actionEvent = new ActionEvent(this, 
-                                                  ActionEvent.ACTION_PERFORMED,
-                                                  AppointmentViewControllerActionEvent.
-                                                          APPOINTMENT_VIEW_CREATE_REQUEST.toString());
+        initialiseEDSelectionFromView(-1);
+        ActionEvent actionEvent = new ActionEvent(this,
+                ActionEvent.ACTION_PERFORMED,
+                AppointmentViewControllerActionEvent.APPOINTMENT_VIEW_REQUEST.toString());
         this.getMyController().actionPerformed(actionEvent);
     }//GEN-LAST:event_btnCreateAppointmentActionPerformed
 
     private void btnUpdateAppointmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateAppointmentActionPerformed
-        ActionEvent actionEvent = new ActionEvent(this, 
-                                                  ActionEvent.ACTION_PERFORMED,
-                                                  AppointmentViewControllerActionEvent.
-                                                          APPOINTMENT_VIEW_UPDATE_REQUEST.toString());
-        this.getMyController().actionPerformed(actionEvent);
+        int row = this.tblAppointmentsForDay.getSelectedRow();
+        if (row == -1){
+            JOptionPane.showMessageDialog(this, "An appointment has not been selected for update");
+        }
+        else if (getEntityDescriptor().getCollection().getAppointments().get(row).getData().IsEmptySlot()){
+            JOptionPane.showMessageDialog(this, "An appointment has not been selected for update");
+        }
+        else{
+            initialiseEDSelectionFromView(row);
+            ActionEvent actionEvent = new ActionEvent(this, 
+                    ActionEvent.ACTION_PERFORMED,
+                    AppointmentViewControllerActionEvent.APPOINTMENT_VIEW_REQUEST.toString());
+            this.getMyController().actionPerformed(actionEvent);
+        }
     }//GEN-LAST:event_btnUpdateAppointmentActionPerformed
+
+    private void btnCloseViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseViewActionPerformed
+        try{
+            this.setClosed(true);
+        }
+        catch (PropertyVetoException e){
+            
+        }
+    }//GEN-LAST:event_btnCloseViewActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnCloseView;
     private javax.swing.JButton btnCreateAppointment;
     private javax.swing.JButton btnUpdateAppointment;
     private javax.swing.JLabel jLabel1;
@@ -512,19 +365,17 @@ public class AppointmentsForDayView extends View{
     class AppointmentDayDateChangeListener implements DateChangeListener {
 
         public void dateChanged(DateChangeEvent event) {
-            String oldDateStringValue = txtAppointmentDay.getText();
             LocalDate date = event.getNewDate();
             if (date == null) {
                 //if date field cleared, make equal to now()
                 date = LocalDate.now();
             }
-            if (!getEntity().getSelection().getDay().getData().equals(date)){
+            if (!getEntityDescriptor().getSelection().getDay().equals(date)){
                 //only if selected date different from selection in EntityDescriptor
-                getEntity().getSelection().getDay().setData(date);
+                getEntityDescriptor().getSelection().setDay(date);
                 ActionEvent actionEvent = new ActionEvent(this, 
-                                                  ActionEvent.ACTION_PERFORMED,
-                                                  AppointmentViewControllerActionEvent.
-                                                          APPOINTMENT_FOR_DAY_RECORDS_REQUEST.toString());
+                        ActionEvent.ACTION_PERFORMED,
+                        AppointmentViewControllerActionEvent.APPOINTMENTS_REQUEST.toString());
                 getMyController().actionPerformed(actionEvent);
             }
             

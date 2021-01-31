@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.io.IOException;
 public interface IStore {
     
-    public void create(Appointment a) throws StoreException;
+    public Appointment create(Appointment a) throws StoreException;
     public Patient create(Patient p) throws StoreException;
     public void delete(Appointment a) throws StoreException;
     public void delete(Patient p) throws StoreException;
@@ -39,6 +39,6 @@ public interface IStore {
     public Patient read(Patient p) throws StoreException;
     public ArrayList<Appointment> readAppointments(LocalDate day) throws StoreException;
     public ArrayList<Appointment> readAppointments(Patient p, Category c) throws StoreException;
-    public void update(Patient p) throws StoreException;
-    public void update(Appointment a) throws StoreException;   
+    public Patient update(Patient p) throws StoreException;
+    public Appointment update(Appointment a) throws StoreException;   
 }

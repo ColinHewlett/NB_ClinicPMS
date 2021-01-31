@@ -21,6 +21,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.event.InternalFrameAdapter;
 
@@ -39,7 +40,7 @@ public class PatientViewController extends ViewController {
     private EntityDescriptor oldEntityDescriptor = new EntityDescriptor();
     private EntityDescriptor newEntityDescriptor = new EntityDescriptor();
     private EntityDescriptor entityDescriptorFromView = null;
-    private InternalFrameAdapter internalFrameAdapter = null;
+    private JFrame owningFrame = null;
 
     
     private void cancelView(ActionEvent e){
@@ -56,7 +57,7 @@ public class PatientViewController extends ViewController {
         for (AppointmentField af: AppointmentField.values()){
             switch(af){
                 case KEY -> ra.setKey(a.getKey());
-                case DURATION -> ra.setDuration(a.getDuration().toMinutes());
+                case DURATION -> ra.setDuration(a.getDuration());
                 case NOTES -> ra.setNotes(a.getNotes());
                 case START -> ra.setStart(a.getStart());   
             }  
@@ -215,7 +216,7 @@ public class PatientViewController extends ViewController {
         this.entityDescriptorFromView = e;
     }
     
-    public PatientViewController(DesktopViewController controller){
+    public PatientViewController(DesktopViewController controller, JFrame owner){
         setMyController(controller);
         pcSupportForView = new PropertyChangeSupport(this);
         this.newEntityDescriptor = new EntityDescriptor();
@@ -254,9 +255,9 @@ public class PatientViewController extends ViewController {
             Patient patient = deserialisePatientFromEDSelection();
             if (patient.getKey() == null){
                 try{
-                    Patient p = patient.create();
+                    patient = patient.create();
                     setOldEntityDescriptor(getNewEntityDescriptor());
-                    serialisePatientToEDPatient(p);
+                    serialisePatientToEDPatient(patient);
                     
                     pcEvent = new PropertyChangeEvent(this,
                             PatientViewControllerPropertyEvent.
@@ -277,10 +278,9 @@ public class PatientViewController extends ViewController {
             Patient patient = deserialisePatientFromEDSelection();
             if (patient.getKey() != null){
                 try{
-                    patient.update();
-                    Patient p = patient.read();
+                    patient = patient.update();
                     setOldEntityDescriptor(getNewEntityDescriptor());
-                    serialisePatientToEDPatient(p);
+                    serialisePatientToEDPatient(patient);
                     
                     pcEvent = new PropertyChangeEvent(this,
                             PatientViewControllerPropertyEvent.
@@ -312,9 +312,8 @@ public class PatientViewController extends ViewController {
             }
         }
         else if (e.getActionCommand().equals(
-                PatientViewControllerActionEvent.PATIENT_REQUEST.toString())){
+                PatientViewControllerActionEvent.PATIENT_VIEW_UPDATE_REQUEST.toString())){
             setEntityDescriptorFromView(((IView)e.getSource()).getEntityDescriptor());
-            setOldEntityDescriptor(getNewEntityDescriptor());
             
             Patient patient = new Patient(
                     getEntityDescriptorFromView().getSelection().getPatient().getData().getKey());

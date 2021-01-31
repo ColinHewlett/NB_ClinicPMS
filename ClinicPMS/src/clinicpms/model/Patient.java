@@ -77,8 +77,8 @@ public class Patient {
             address = new Address();
             recall = new Recall();
             appointmentHistory = new AppointmentHistory();
-            setKey(key);
-    } /*constructor returns a Patient object with its key initialised*/
+            this.key = key;
+    } 
     
     public Patient create() throws StoreException{
         CSVStore store = CSVStore.getInstance();
@@ -95,9 +95,9 @@ public class Patient {
         return store.read(this); 
     }
     
-    public void update() throws StoreException{ 
+    public Patient update() throws StoreException{ 
         CSVStore store = CSVStore.getInstance();
-        store.update(this);
+        return store.update(this);
     }
 
     public class Name {

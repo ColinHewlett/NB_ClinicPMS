@@ -15,5 +15,8 @@ import javax.swing.JInternalFrame;
  */
 public abstract class View extends JInternalFrame
                            implements PropertyChangeListener,IView{
-
+    public View(){
+        super("Appointments view",true,true,true,true);
+        
+    }
 }

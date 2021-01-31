@@ -260,8 +260,7 @@ public class PatientView extends View
             */
         }
         else if (e.getPropertyName().equals(
-                PatientViewControllerPropertyEvent.
-                        PATIENT_RECORDS_RECEIVED.toString())){
+                PatientViewControllerPropertyEvent.PATIENTS_RECEIVED.toString())){
             setEntityDescriptor((EntityDescriptor)e.getNewValue());
             populatePatientSelector(this.cmbSelectPatient);
         }
@@ -271,8 +270,7 @@ public class PatientView extends View
          * back from the controller 
          */
         else if (e.getPropertyName().equals(
-                PatientViewControllerPropertyEvent.
-                        PATIENT_RECORD_RECEIVED.toString())){
+                PatientViewControllerPropertyEvent.PATIENT_RECEIVED.toString())){
             setEntityDescriptor((EntityDescriptor)e.getNewValue());
             EntityDescriptor oldEntity = (EntityDescriptor)e.getOldValue();
             try{
@@ -546,7 +544,7 @@ public class PatientView extends View
         getEntityDescriptor().getSelection().getPatient().getData().setTitle(getPatientTitle());
         getEntityDescriptor().getSelection().getPatient().getData().setTown(getTown());
         if (getGuardian() != null){
-            getEntityDescriptor().getSelection().getPatient().setGuardian(getGuardian());
+            getEntityDescriptor().getSelection().setGuardian(getGuardian());
         }
         
             
