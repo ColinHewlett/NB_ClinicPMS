@@ -11,26 +11,22 @@ import clinicpms.view.interfaces.IView;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.optionalusertools.DateChangeListener;
 import com.github.lgooddatepicker.zinternaltools.DateChangeEvent;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import javax.swing.*;
-import javax.swing.table.TableModel;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.DefaultTableColumnModel;
-import java.time.LocalDateTime;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.beans.PropertyVetoException;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import java.time.Duration;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
-import java.time.LocalTime;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 
 /**
  *
@@ -94,16 +90,10 @@ public class AppointmentsForDayView extends View{
         AppointmentsTableModel model = new AppointmentsTableModel(appointments);
         this.tblAppointmentsForDay.setModel(model);
     }
-
-     
     private void initialiseEDSelectionFromView(int row){
-        if (row == -1){
-            getEntityDescriptor().getSelection().getAppointment().setStatus(EntityDescriptor.Status.DEAD);
-        }
-        else{
+        if (row > -1){
             getEntityDescriptor().getSelection().setAppointment(
                     getEntityDescriptor().getCollection().getAppointments().get(row));
-            getEntityDescriptor().getSelection().getAppointment().setStatus(EntityDescriptor.Status.ALIVE);
         }
     }
 
@@ -116,7 +106,19 @@ public class AppointmentsForDayView extends View{
         this.setEntityDescriptor(ed);
         setView(this);
         initComponents();
-        //initialise cell rendering classes for the appointments table
+        /**
+         * Establish an InternalFrameListener for when the view is closed 
+         */
+        new InternalFrameAdapter(){
+            @Override  
+            public void internalFrameClosed(InternalFrameEvent e) {
+                ActionEvent actionEvent = new ActionEvent(
+                        this,ActionEvent.ACTION_PERFORMED,
+                        ViewController.DesktopViewControllerActionEvent.VIEW_CLOSED_NOTIFICATION.toString());
+                getMyController().actionPerformed(actionEvent);
+            }
+        };
+        
         this.tblAppointmentsForDay = new JTable();
         this.scrAppointmentsForDayTable.add(this.tblAppointmentsForDay);
         this.tblAppointmentsForDay.setDefaultRenderer(LocalDateTime.class, new AppointmentsTableLocalDateTimeRenderer());
@@ -225,6 +227,7 @@ public class AppointmentsForDayView extends View{
         jLabel1 = new javax.swing.JLabel();
         btnCreateAppointment = new javax.swing.JButton();
         btnUpdateAppointment = new javax.swing.JButton();
+        btnCloseView = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -247,6 +250,13 @@ public class AppointmentsForDayView extends View{
             }
         });
 
+        btnCloseView.setText("Close view");
+        btnCloseView.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCloseViewActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout pnlControlsLayout = new javax.swing.GroupLayout(pnlControls);
         pnlControls.setLayout(pnlControlsLayout);
         pnlControlsLayout.setHorizontalGroup(
@@ -256,11 +266,13 @@ public class AppointmentsForDayView extends View{
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtAppointmentDay, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 158, Short.MAX_VALUE)
-                .addComponent(btnCreateAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnUpdateAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(9, 9, 9))
+                .addGap(30, 30, 30)
+                .addComponent(btnCreateAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30)
+                .addComponent(btnUpdateAppointment)
+                .addGap(30, 30, 30)
+                .addComponent(btnCloseView)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         pnlControlsLayout.setVerticalGroup(
             pnlControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -269,8 +281,9 @@ public class AppointmentsForDayView extends View{
                 .addGroup(pnlControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(txtAppointmentDay, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnCreateAppointment, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnUpdateAppointment))
+                    .addComponent(btnCreateAppointment)
+                    .addComponent(btnUpdateAppointment)
+                    .addComponent(btnCloseView))
                 .addGap(2, 2, 2))
         );
 
@@ -294,7 +307,8 @@ public class AppointmentsForDayView extends View{
             .addGroup(layout.createSequentialGroup()
                 .addComponent(pnlControls, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addComponent(scrAppointmentsForDayTable, javax.swing.GroupLayout.PREFERRED_SIZE, 267, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(scrAppointmentsForDayTable, javax.swing.GroupLayout.PREFERRED_SIZE, 267, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -311,21 +325,32 @@ public class AppointmentsForDayView extends View{
     private void btnUpdateAppointmentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateAppointmentActionPerformed
         int row = this.tblAppointmentsForDay.getSelectedRow();
         if (row == -1){
-            JOptionPane.showMessageDialog(this, "An appointment to update has not been selected");
+            JOptionPane.showMessageDialog(this, "An appointment has not been selected for update");
         }
-        else if (getEntityDescriptor().getCollection().
-                getAppointments().get(row).getStatus() == EntityDescriptor.Status.DEAD){
-            JOptionPane.showMessageDialog(this, "An appointment to update has not been selected");
+        else if (getEntityDescriptor().getCollection().getAppointments().get(row).getData().IsEmptySlot()){
+            JOptionPane.showMessageDialog(this, "An appointment has not been selected for update");
         }
-        initialiseEDSelectionFromView(row);
-        ActionEvent actionEvent = new ActionEvent(this, 
-                ActionEvent.ACTION_PERFORMED,
-                AppointmentViewControllerActionEvent.APPOINTMENT_VIEW_REQUEST.toString());
-        this.getMyController().actionPerformed(actionEvent);
+        else{
+            initialiseEDSelectionFromView(row);
+            ActionEvent actionEvent = new ActionEvent(this, 
+                    ActionEvent.ACTION_PERFORMED,
+                    AppointmentViewControllerActionEvent.APPOINTMENT_VIEW_REQUEST.toString());
+            this.getMyController().actionPerformed(actionEvent);
+        }
     }//GEN-LAST:event_btnUpdateAppointmentActionPerformed
+
+    private void btnCloseViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseViewActionPerformed
+        try{
+            this.setClosed(true);
+        }
+        catch (PropertyVetoException e){
+            
+        }
+    }//GEN-LAST:event_btnCloseViewActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnCloseView;
     private javax.swing.JButton btnCreateAppointment;
     private javax.swing.JButton btnUpdateAppointment;
     private javax.swing.JLabel jLabel1;

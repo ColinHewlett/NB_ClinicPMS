@@ -21,6 +21,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.event.InternalFrameAdapter;
 
@@ -39,7 +40,7 @@ public class PatientViewController extends ViewController {
     private EntityDescriptor oldEntityDescriptor = new EntityDescriptor();
     private EntityDescriptor newEntityDescriptor = new EntityDescriptor();
     private EntityDescriptor entityDescriptorFromView = null;
-    private InternalFrameAdapter internalFrameAdapter = null;
+    private JFrame owningFrame = null;
 
     
     private void cancelView(ActionEvent e){
@@ -215,7 +216,7 @@ public class PatientViewController extends ViewController {
         this.entityDescriptorFromView = e;
     }
     
-    public PatientViewController(DesktopViewController controller){
+    public PatientViewController(DesktopViewController controller, JFrame owner){
         setMyController(controller);
         pcSupportForView = new PropertyChangeSupport(this);
         this.newEntityDescriptor = new EntityDescriptor();

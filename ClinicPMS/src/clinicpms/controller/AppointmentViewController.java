@@ -13,11 +13,12 @@ import clinicpms.store.exceptions.StoreException;
 import clinicpms.view.AppointmentsForDayView;
 import clinicpms.view.AppointmentViewDialog;
 import clinicpms.view.interfaces.IView;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeSupport;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeSupport;
+import java.beans.PropertyVetoException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -86,9 +87,23 @@ public class AppointmentViewController extends ViewController {
                                                         pcSupport.removePropertyChangeListener(this.dialog);
                                                         pcSupport.addPropertyChangeListener(this.dialog);
                                                         doAppointmentViewDialogActions(e);}
+            case "DesktopViewController" -> doDesktopViewControllerAction(e);
         }
     }
     
+    private void doDesktopViewControllerAction(ActionEvent e){
+        if (e.getActionCommand().equals(DesktopViewControllerActionEvent.VIEW_CLOSE_REQUEST.toString())){
+            try{
+                /**
+                 * view will message view controller when view is closed 
+                 */
+                getView().setClosed(true);
+            }
+            catch (PropertyVetoException ex){
+                //UnspecifiedError action
+            }
+        }
+    }
     private void doAppointmentViewDialogActions(ActionEvent e){
         if (e.getActionCommand().equals(AppointmentViewDialogActionEvent.
                 APPOINTMENT_VIEW_CREATE_REQUEST.toString())){
@@ -353,7 +368,7 @@ public class AppointmentViewController extends ViewController {
         RenderedAppointment renderedAppointment = renderAppointment(appointment);
         RenderedPatient renderedPatient;
         if (appointment.getPatient() != null){
-            renderedAppointment.setIsEmptySlot(false);
+            renderedAppointment.IsEmptySlot(false);
             renderedPatient = renderPatient(appointment.getPatient());
             getNewEntityDescriptor().setAppointment(new EntityDescriptor().getAppointment());
             getNewEntityDescriptor().getAppointment().setData(renderedAppointment);
@@ -361,7 +376,7 @@ public class AppointmentViewController extends ViewController {
             getNewEntityDescriptor().getAppointment().getPatient().setGuardian(null);
         }
         else {
-            renderedAppointment.setIsEmptySlot(true);
+            renderedAppointment.IsEmptySlot(true);
             getNewEntityDescriptor().getAppointment().setData(renderedAppointment);
             getNewEntityDescriptor().getAppointment().setPatient(null);
         }

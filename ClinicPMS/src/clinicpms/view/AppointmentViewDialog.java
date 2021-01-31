@@ -175,7 +175,7 @@ public class AppointmentViewDialog extends javax.swing.JDialog
         this.spnDurationMinutes.setValue(getMinutesFromDuration(getEntityDescriptor().getAppointment().getData().getDuration().toMinutes()));
         this.txtNotes.setText(getEntityDescriptor().getAppointment().getData().getNotes());
         populatePatientSelector(this.cmbSelectPatient);
-        if (!getEntityDescriptor().getAppointment().getData().getIsEmptySlot()){
+        if (!getEntityDescriptor().getAppointment().getData().IsEmptySlot()){
             this.cmbSelectPatient.setSelectedItem(getEntityDescriptor().getAppointment().getPatient());
         }
     }

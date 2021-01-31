@@ -26,17 +26,15 @@ public class RenderedAppointment {
         key = value;
     }
     
-    public boolean getIsKeyDefined(){
-        return this.isKeyDefined;
+    public boolean IsKeyDefined(){
+        return key!=null;
     }
-    protected void setIsKeyDefined(boolean value){
-        this.isKeyDefined = value;
-    }
-    
-    public boolean getIsEmptySlot(){
+
+    public boolean IsEmptySlot(){
         return this.isEmptySlot;
     }
-    protected void setIsEmptySlot(boolean value){
+    
+    protected void IsEmptySlot(boolean value){
         this.isEmptySlot = value;
     }
     
