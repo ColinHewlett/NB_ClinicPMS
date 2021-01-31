@@ -127,7 +127,6 @@ public class Appointments implements IAppointments{
      * @throws StoreException 
      */
     public ArrayList<Appointment> getAppointmentsForDayIncludingEmptyAppointmentSlots(LocalDate day) throws StoreException{
-        ArrayList<Appointment> apptsForDayIncludingEmptySlots = new ArrayList<>();
         ArrayList<Appointment> appts = getAppointmentsFor(day);
         Iterator it = appts.iterator();
         nextEmptySlotStartTime = LocalDateTime.of(day, 

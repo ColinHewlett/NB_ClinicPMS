@@ -17,6 +17,7 @@ public class RenderedAppointment {
     private Duration duration = null;
     private String notes = null;
     private boolean isKeyDefined = false;
+    private boolean isEmptySlot = false;
     
     protected Integer getKey(){
         return key;
@@ -30,6 +31,13 @@ public class RenderedAppointment {
     }
     protected void setIsKeyDefined(boolean value){
         this.isKeyDefined = value;
+    }
+    
+    public boolean getIsEmptySlot(){
+        return this.isEmptySlot;
+    }
+    protected void setIsEmptySlot(boolean value){
+        this.isEmptySlot = value;
     }
     
     public LocalDateTime getStart(){

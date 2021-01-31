@@ -56,7 +56,7 @@ public class PatientViewController extends ViewController {
         for (AppointmentField af: AppointmentField.values()){
             switch(af){
                 case KEY -> ra.setKey(a.getKey());
-                case DURATION -> ra.setDuration(a.getDuration().toMinutes());
+                case DURATION -> ra.setDuration(a.getDuration());
                 case NOTES -> ra.setNotes(a.getNotes());
                 case START -> ra.setStart(a.getStart());   
             }  
@@ -311,9 +311,8 @@ public class PatientViewController extends ViewController {
             }
         }
         else if (e.getActionCommand().equals(
-                PatientViewControllerActionEvent.PATIENT_REQUEST.toString())){
+                PatientViewControllerActionEvent.PATIENT_VIEW_UPDATE_REQUEST.toString())){
             setEntityDescriptorFromView(((IView)e.getSource()).getEntityDescriptor());
-            setOldEntityDescriptor(getNewEntityDescriptor());
             
             Patient patient = new Patient(
                     getEntityDescriptorFromView().getSelection().getPatient().getData().getKey());

@@ -18,30 +18,7 @@ public abstract class ViewController implements ActionListener{
                                 START,
                                 DURATION,
                                 NOTES}
-    public enum PatientField {
-                              KEY,
-                              TITLE,
-                              FORENAMES,
-                              SURNAME,
-                              LINE1,
-                              LINE2,
-                              TOWN,
-                              COUNTY,
-                              POSTCODE,
-                              PHONE1,
-                              PHONE2,
-                              GENDER,
-                              DOB,
-                              IS_GUARDIAN_A_PATIENT,
-                              GUARDIAN,
-                              NOTES,
-                              DENTAL_RECALL_DATE,
-                              HYGIENE_RECALL_DATE,
-                              DENTAL_RECALL_FREQUENCY,
-                              HYGIENE_RECALL_FREQUENCY,
-                              DENTAL_APPOINTMENT_HISTORY,
-                              HYGIENE_APPOINTMENT_HISTORY}
-    
+    public static enum Status{BOOKED,UNBOOKED};
     public enum AppointmentViewControllerActionEvent {
                                             APPOINTMENT_CANCEL_REQUEST,/*of selected appt*/
                                             APPOINTMENT_VIEW_REQUEST,/*of selected appt*/
@@ -66,7 +43,35 @@ public abstract class ViewController implements ActionListener{
                                             DESKTOP_VIEW_APPOINTMENTS_REQUEST,
                                             DESKTOP_VIEW_PATIENTS_REQUEST,
     }
+    
+    public enum DesktopViewControllerPropertyEvent{
+                                            
+    }
 
+    public enum PatientField {
+                              KEY,
+                              TITLE,
+                              FORENAMES,
+                              SURNAME,
+                              LINE1,
+                              LINE2,
+                              TOWN,
+                              COUNTY,
+                              POSTCODE,
+                              PHONE1,
+                              PHONE2,
+                              GENDER,
+                              DOB,
+                              IS_GUARDIAN_A_PATIENT,
+                              GUARDIAN,
+                              NOTES,
+                              DENTAL_RECALL_DATE,
+                              HYGIENE_RECALL_DATE,
+                              DENTAL_RECALL_FREQUENCY,
+                              HYGIENE_RECALL_FREQUENCY,
+                              DENTAL_APPOINTMENT_HISTORY,
+                              HYGIENE_APPOINTMENT_HISTORY}
+    
     public static enum PatientViewControllerActionEvent {
                                             PATIENT_REQUEST,
                                             PATIENTS_REQUEST,
@@ -77,12 +82,7 @@ public abstract class ViewController implements ActionListener{
     public static enum PatientViewControllerPropertyEvent {
                                             PATIENT_RECEIVED,
                                             PATIENTS_RECEIVED}
-    
-    
-    public enum DesktopViewControllerPropertyEvent{
-                                            
-    }
-    
+
     public enum ViewMode {CREATE,
                           UPDATE}
      

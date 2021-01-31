@@ -14,6 +14,7 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -147,10 +148,14 @@ public class AppointmentViewDialog extends javax.swing.JDialog
         });
     }
     private void initialiseEntityDescriptorFromView(){
-        getEntityDescriptor().getSelection().getAppointment().setPatient((EntityDescriptor.Patient)this.cmbSelectPatient.getSelectedItem());
-        getEntityDescriptor().getSelection().getAppointment().getData().setStart(getStartDateTime());
-        getEntityDescriptor().getSelection().getAppointment().getData().setDuration(getDurationFromView());
-        getEntityDescriptor().getSelection().getAppointment().getData().setNotes(this.txtNotes.getText());
+        getEntityDescriptor().getSelection().setAppointee(
+                (EntityDescriptor.Patient)this.cmbSelectPatient.getSelectedItem());
+        getEntityDescriptor().getSelection().getAppointment().getData().
+                setStart(getStartDateTime());
+        getEntityDescriptor().getSelection().getAppointment().getData().
+                setDuration(Duration.ofMinutes(getDurationFromView()));
+        getEntityDescriptor().getSelection().getAppointment().getData().
+                setNotes(this.txtNotes.getText());
     }
     private LocalDateTime getStartDateTime(){
         return getEntityDescriptor().getSelection().getDay().atTime(
@@ -170,7 +175,9 @@ public class AppointmentViewDialog extends javax.swing.JDialog
         this.spnDurationMinutes.setValue(getMinutesFromDuration(getEntityDescriptor().getAppointment().getData().getDuration().toMinutes()));
         this.txtNotes.setText(getEntityDescriptor().getAppointment().getData().getNotes());
         populatePatientSelector(this.cmbSelectPatient);
-        this.cmbSelectPatient.setSelectedItem(getEntityDescriptor().getAppointment().getPatient());
+        if (!getEntityDescriptor().getAppointment().getData().getIsEmptySlot()){
+            this.cmbSelectPatient.setSelectedItem(getEntityDescriptor().getAppointment().getPatient());
+        }
     }
     private Integer getHoursFromDuration(long duration){
         return (int)duration / 60;
