@@ -55,20 +55,16 @@ public class AppointmentViewController extends ViewController {
      * @param owner JFrame the owning frame the view controller needs to reference 
      * if managing a customised JDialog view
      */
-    public AppointmentViewController(ActionListener controller, JFrame owner){
+    public AppointmentViewController(ActionListener controller, JFrame owner)throws StoreException{
         setMyController(controller);
         this.owningFrame = owner;
         pcSupport = new PropertyChangeSupport(this);
-        setView(view);
         setNewEntityDescriptor(new EntityDescriptor());
-        getNewEntityDescriptor().getSelection().setDay(LocalDate.now());
-        try{
-            getAppointmentsForSelectedDay();
-            this.view = new AppointmentsForDayView(this, getNewEntityDescriptor());
-        }
-        catch (StoreException e){
-           //UnpsecifiedError action 
-        }
+        getNewEntityDescriptor().getRequest().setDay(LocalDate.now());
+        setEntityDescriptorFromView(getNewEntityDescriptor());
+        getAppointmentsForSelectedDay();
+        this.view = new AppointmentsForDayView(this, getNewEntityDescriptor());
+        
     }
     @Override
     public void actionPerformed(ActionEvent e){
@@ -175,10 +171,10 @@ public class AppointmentViewController extends ViewController {
             }
         }
         else if (e.getActionCommand().equals(AppointmentViewControllerActionEvent.APPOINTMENT_VIEW_REQUEST.toString())){
-            if (getEntityDescriptorFromView().getSelection().getAppointment().getData().getKey() != null){
+            if (getEntityDescriptorFromView().getRequest().getAppointment().getData().getKey() != null){
                 try{
                     Appointment appointment = new Appointment(
-                            getEntityDescriptorFromView().getSelection().
+                            getEntityDescriptorFromView().getRequest().
                                     getAppointment().getData().getKey()).read();
                     ArrayList<Patient> patients = new Patients().getPatients();
                     initialiseNewEntityDescriptor();
@@ -199,9 +195,9 @@ public class AppointmentViewController extends ViewController {
             }
         }
         else if (e.getActionCommand().equals(AppointmentViewControllerActionEvent.APPOINTMENT_CANCEL_REQUEST.toString())){
-            if (getEntityDescriptorFromView().getSelection().getAppointment().getData().getKey()!=null){
+            if (getEntityDescriptorFromView().getRequest().getAppointment().getData().getKey()!=null){
                 Appointment appointment = new Appointment(
-                        getEntityDescriptorFromView().getSelection().getAppointment().getData().getKey());
+                        getEntityDescriptorFromView().getRequest().getAppointment().getData().getKey());
                 try{
                     appointment.delete();
                     getAppointmentsForSelectedDay();
@@ -215,14 +211,14 @@ public class AppointmentViewController extends ViewController {
     private void getAppointmentsForSelectedDay() throws StoreException{
         LocalDateTime nextEmptySlotStartTime;
         ArrayList<Appointment> apptsForDayIncludingEmptySlots = new ArrayList<>();
-        LocalDate theDay = getEntityDescriptorFromView().getSelection().getDay();
+        LocalDate theDay = getEntityDescriptorFromView().getRequest().getDay();
         if (theDay != null){
             /*this.appointments = 
                 new Appointments().getAppointmentsForDayIncludingEmptyAppointmentSlots(theDay);*/
             this.appointments =
                     new Appointments().getAppointmentsFor(theDay);
             Iterator it = appointments.iterator();
-            nextEmptySlotStartTime = LocalDateTime.of(day, 
+            nextEmptySlotStartTime = LocalDateTime.of(theDay, 
                                                   ClinicPMS.FIRST_APPOINTMENT_SLOT);
             /**
              * check for no appointments on this day if no appointment create a
@@ -330,7 +326,7 @@ public class AppointmentViewController extends ViewController {
         appointment.setDuration(getEntityDescriptorFromView().getAppointment().getData().getDuration());
         appointment.setStart(getEntityDescriptorFromView().getAppointment().getData().getStart());
         appointment.setNotes(getEntityDescriptorFromView().getAppointment().getData().getNotes());
-        appointment.setPatient(makePatientFrom(getEntityDescriptorFromView().getAppointment().getPatient()));
+        appointment.setPatient(makePatientFrom(getEntityDescriptorFromView().getPatient()));
         return appointment;
     }
 
@@ -361,7 +357,7 @@ public class AppointmentViewController extends ViewController {
     private void initialiseNewEntityDescriptor(){
         setOldEntityDescriptor(getNewEntityDescriptor());
         setNewEntityDescriptor(new EntityDescriptor());
-        getNewEntityDescriptor().getSelection().setDay(getOldEntityDescriptor().getSelection().getDay());
+        getNewEntityDescriptor().getRequest().setDay(getOldEntityDescriptor().getRequest().getDay());
     }
     
     private void serialiseAppointmentToEDAppointment(Appointment appointment){
@@ -372,13 +368,12 @@ public class AppointmentViewController extends ViewController {
             renderedPatient = renderPatient(appointment.getPatient());
             getNewEntityDescriptor().setAppointment(new EntityDescriptor().getAppointment());
             getNewEntityDescriptor().getAppointment().setData(renderedAppointment);
-            getNewEntityDescriptor().getAppointment().getPatient().setData(renderedPatient);
-            getNewEntityDescriptor().getAppointment().getPatient().setGuardian(null);
+            getNewEntityDescriptor().getAppointment().getAppointee().setData(renderedPatient);
         }
         else {
             renderedAppointment.IsEmptySlot(true);
             getNewEntityDescriptor().getAppointment().setData(renderedAppointment);
-            getNewEntityDescriptor().getAppointment().setPatient(null);
+            getNewEntityDescriptor().getAppointment().setAppointee(null);
         }
     }
     private RenderedPatient renderPatient(Patient p){
@@ -434,38 +429,40 @@ public class AppointmentViewController extends ViewController {
      * @param appointments, collection of model Appointment objects 
      */
     private void serialiseAppointmentsToEDCollection(ArrayList<Appointment> appointments){
-        getNewEntityDescriptor().getCollection().getAppointments().clear();
+        getNewEntityDescriptor().getAppointments().getData().clear();
         Iterator<Appointment> appointmentsIterator = appointments.iterator();
         while(appointmentsIterator.hasNext()){
             Appointment appointment = appointmentsIterator.next();
-            RenderedAppointment a = renderAppointment(appointment);
-            getNewEntityDescriptor().getAppointment().setData(a);
+            RenderedAppointment renderedAppointment = renderAppointment(appointment);
+            getNewEntityDescriptor().getAppointment().setData(renderedAppointment);
             if (appointment.getStatus() == Appointment.Status.BOOKED){
-                RenderedPatient appointee = renderPatient(appointment.getPatient());
-                getNewEntityDescriptor().getAppointment().setPatient(new EntityDescriptor().getPatient());
-                getNewEntityDescriptor().getAppointment().getPatient().setData(appointee);
-                getNewEntityDescriptor().getAppointment().getPatient().setGuardian(null);
+                getNewEntityDescriptor().getAppointment().getData().IsEmptySlot(false);
+                if (appointment.getPatient()!=null){
+                    RenderedPatient appointee = renderPatient(appointment.getPatient());
+                    getNewEntityDescriptor().getAppointment().setAppointee(new EntityDescriptor().getPatient());
+                    getNewEntityDescriptor().getAppointment().getAppointee().setData(appointee);
+                }
             }
             else{
-                getNewEntityDescriptor().getAppointment().setPatient(null);
+                getNewEntityDescriptor().getAppointment().getData().IsEmptySlot(true);
             }
-            getNewEntityDescriptor().getCollection().getAppointments().add(getNewEntityDescriptor().getAppointment());
+            getNewEntityDescriptor().getAppointments().getData().add(getNewEntityDescriptor().getAppointment());
         }
     }
    
     private void serialisePatientsToEDCollection(ArrayList<Patient> patients) throws StoreException{
         //fetch all patients on the system from the model
         
-        getNewEntityDescriptor().getCollection().getPatients().clear();
+        getNewEntityDescriptor().getPatients().getData().clear();
         Iterator<Patient> patientsIterator = patients.iterator();
         while(patientsIterator.hasNext()){
             Patient patient = patientsIterator.next();
             RenderedPatient renderedPatient = renderPatient(patient);
             getNewEntityDescriptor().setPatient(new EntityDescriptor().getPatient());
             getNewEntityDescriptor().getPatient().setData(renderedPatient);
-            getNewEntityDescriptor().getPatient().setGuardian(null);
-            getNewEntityDescriptor().getPatient().setAppointmentHistory(null);
-            getNewEntityDescriptor().getCollection().getPatients().add(getNewEntityDescriptor().getPatient());
+            getNewEntityDescriptor().setPatientGuardian(new EntityDescriptor().getPatientGuardian());
+            getNewEntityDescriptor().setPatientAppointmentHistory(null);
+            getNewEntityDescriptor().getPatients().getData().add(getNewEntityDescriptor().getPatient());
         }
     }
 

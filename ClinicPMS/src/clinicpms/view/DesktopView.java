@@ -133,6 +133,15 @@ public class DesktopView extends javax.swing.JFrame{
         */
         setContentPaneForInternalFrame();
     }
+    /*
+    @Override
+    public javax.swing.JDesktopPane getContentPane(){
+        return deskTop;
+    }
+    */
+    public javax.swing.JDesktopPane getDeskTop(){
+        return deskTop;
+    } 
     private void setContentPaneForInternalFrame(){
         setContentPane(deskTop);
     }
@@ -140,8 +149,8 @@ public class DesktopView extends javax.swing.JFrame{
     public DesktopViewController getController(){
         return controller;
     }
-    public void setController(DesktopViewController vc){
-        controller = vc;
+    public void setController(DesktopViewController value){
+        controller = value;
     }
 
     /**
@@ -203,6 +212,8 @@ public class DesktopView extends javax.swing.JFrame{
         ActionEvent actionEvent = new ActionEvent(this, 
                 ActionEvent.ACTION_PERFORMED,
                 DesktopViewControllerActionEvent.DESKTOP_VIEW_APPOINTMENTS_REQUEST.toString());
+        String s;
+        s = actionEvent.getSource().getClass().getSimpleName();
         this.getController().actionPerformed(actionEvent);
     }
     

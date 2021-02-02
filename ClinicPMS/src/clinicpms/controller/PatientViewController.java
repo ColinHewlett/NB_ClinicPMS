@@ -110,14 +110,14 @@ public class PatientViewController extends ViewController {
     private void serialisePatientsToEDCollection(ArrayList<Patient> patients) throws StoreException{
         //fetch all patients on the system from the model
         
-        getNewEntityDescriptor().getCollection().getPatients().clear();
+        getNewEntityDescriptor().getPatients().getData().clear();
         Iterator<Patient> patientsIterator = patients.iterator();
         while(patientsIterator.hasNext()){       
             getNewEntityDescriptor().setPatient(new EntityDescriptor().getPatient());
             Patient patient = patientsIterator.next();
             RenderedPatient p = renderPatient(patient);
             getNewEntityDescriptor().getPatient().setData(p);
-            getNewEntityDescriptor().getCollection().getPatients().add(getNewEntityDescriptor().getPatient());
+            getNewEntityDescriptor().getPatients().getData().add(getNewEntityDescriptor().getPatient());
         }
     }
     /**
@@ -133,7 +133,7 @@ public class PatientViewController extends ViewController {
         if (patient.getIsGuardianAPatient()){
             if (patient.getGuardian() != null){
                 RenderedPatient g = renderPatient(patient.getGuardian());
-                getNewEntityDescriptor().getPatient().getGuardian().setData(g);  
+                getNewEntityDescriptor().getPatientGuardian().setData(g);  
             }
         }
         ArrayList<Appointment> appointments;
@@ -152,8 +152,8 @@ public class PatientViewController extends ViewController {
                 Appointment appointment = appointmentsIterator.next();
                 RenderedAppointment a = renderAppointment(appointment);
                 getNewEntityDescriptor().getAppointment().setData(a);
-                getNewEntityDescriptor().getAppointment().setPatient(getNewEntityDescriptor().getPatient());
-                getNewEntityDescriptor().getPatient().getAppointmentHistory().getDentalAppointments()
+                getNewEntityDescriptor().getAppointment().setAppointee(getNewEntityDescriptor().getPatient());
+                getNewEntityDescriptor().getPatientAppointmentHistory().getDentalAppointments()
                         .add(getNewEntityDescriptor().getAppointment());
             }
     }
@@ -191,11 +191,11 @@ public class PatientViewController extends ViewController {
      * @return model Patient object
      */
     private Patient deserialisePatientFromEDSelection(){
-        Patient patient = makePatientFrom(getEntityDescriptorFromView().getSelection().getPatient());
-        if (getEntityDescriptorFromView().getSelection().getPatient().getData().getIsGuardianAPatient()){
-            if (getEntityDescriptorFromView().getSelection().getPatient().getGuardian()!=null){
+        Patient patient = makePatientFrom(getEntityDescriptorFromView().getRequest().getPatient());
+        if (getEntityDescriptorFromView().getRequest().getPatient().getData().getIsGuardianAPatient()){
+            if (getEntityDescriptorFromView().getRequest().getPatientGuardian()!=null){
                 patient.setGuardian(makePatientFrom(
-                        getEntityDescriptorFromView().getSelection().getPatient().getGuardian()));
+                        getEntityDescriptorFromView().getRequest().getPatientGuardian()));
             }
         }
         return patient;
@@ -316,7 +316,7 @@ public class PatientViewController extends ViewController {
             setEntityDescriptorFromView(((IView)e.getSource()).getEntityDescriptor());
             
             Patient patient = new Patient(
-                    getEntityDescriptorFromView().getSelection().getPatient().getData().getKey());
+                    getEntityDescriptorFromView().getRequest().getPatient().getData().getKey());
             try{
                 Patient p = patient.read();
                 setOldEntityDescriptor(getNewEntityDescriptor());
