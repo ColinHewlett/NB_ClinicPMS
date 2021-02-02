@@ -17,7 +17,7 @@ import javax.swing.table.TableCellRenderer;
  * @author colin
  */
 public class AppointmentsTableLocalDateTimeRenderer extends JLabel implements TableCellRenderer{
-    private DateTimeFormatter hhmm12Format = DateTimeFormatter.ofPattern("HHmm a");
+    private DateTimeFormatter ddMMyyhhmm12Format = DateTimeFormatter.ofPattern("dd/MM/yyyy HHmm a");
     
     public AppointmentsTableLocalDateTimeRenderer()
     {
@@ -31,7 +31,7 @@ public class AppointmentsTableLocalDateTimeRenderer extends JLabel implements Ta
         boolean hasFocus, int row, int column)
     {
         LocalDateTime startTime = (LocalDateTime)value;
-        super.setText(startTime.format(hhmm12Format));
+        super.setText(startTime.format(ddMMyyhhmm12Format));
         return this;
     }
 }

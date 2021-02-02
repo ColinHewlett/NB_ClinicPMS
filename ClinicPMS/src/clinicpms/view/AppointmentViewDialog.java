@@ -37,7 +37,7 @@ public class AppointmentViewDialog extends javax.swing.JDialog
     private ViewController.ViewMode viewMode = null;
     private final String CREATE_BUTTON = "Create appointment";
     private final String UPDATE_BUTTON = "Update appointment";
-    private String[] times =   {"08:00","08:05","08:10","08:15","08:20","08:25",
+    private final String[] times =   {"08:00","08:05","08:10","08:15","08:20","08:25",
                                 "08:30","08:35","08:40","08:45","08:50","08:55",
                                 "09:00","09:05","09:10","09:15","09:20","09:25",
                                 "09:30","09:35","09:40","09:45","09:50","09:55",
@@ -78,9 +78,7 @@ public class AppointmentViewDialog extends javax.swing.JDialog
         setMyController(myController);
         setViewMode(viewMode);
         initComponents();
-        this.setVisible(true);
-        String[] times = reverseTimes(this.times);
-        this.spnStartTime.setModel(new SpinnerListModel(times));
+        this.spnStartTime.setModel(new SpinnerListModel(reverseTimes(this.times)));
         this.spnStartTime.setValue(getDefaultTime());
         initialiseViewMode(getViewMode());
         if (getViewMode().equals(ViewController.ViewMode.UPDATE)){
@@ -97,7 +95,7 @@ public class AppointmentViewDialog extends javax.swing.JDialog
             initialiseViewFromED();
         }
     }
-    
+    @Override
     public EntityDescriptor getEntityDescriptor(){
         return this.entityDescriptor;
     }
@@ -148,17 +146,17 @@ public class AppointmentViewDialog extends javax.swing.JDialog
         });
     }
     private void initialiseEntityDescriptorFromView(){
-        getEntityDescriptor().getSelection().setAppointee(
+        getEntityDescriptor().getRequest().setPatient(
                 (EntityDescriptor.Patient)this.cmbSelectPatient.getSelectedItem());
-        getEntityDescriptor().getSelection().getAppointment().getData().
+        getEntityDescriptor().getRequest().getAppointment().getData().
                 setStart(getStartDateTime());
-        getEntityDescriptor().getSelection().getAppointment().getData().
+        getEntityDescriptor().getRequest().getAppointment().getData().
                 setDuration(Duration.ofMinutes(getDurationFromView()));
-        getEntityDescriptor().getSelection().getAppointment().getData().
+        getEntityDescriptor().getRequest().getAppointment().getData().
                 setNotes(this.txtNotes.getText());
     }
     private LocalDateTime getStartDateTime(){
-        return getEntityDescriptor().getSelection().getDay().atTime(
+        return getEntityDescriptor().getRequest().getDay().atTime(
                 (int)this.spnDurationHours.getValue(),(int)this.spnDurationMinutes.getValue());
     }
     private long getDurationFromView(){
@@ -176,7 +174,7 @@ public class AppointmentViewDialog extends javax.swing.JDialog
         this.txtNotes.setText(getEntityDescriptor().getAppointment().getData().getNotes());
         populatePatientSelector(this.cmbSelectPatient);
         if (!getEntityDescriptor().getAppointment().getData().IsEmptySlot()){
-            this.cmbSelectPatient.setSelectedItem(getEntityDescriptor().getAppointment().getPatient());
+            this.cmbSelectPatient.setSelectedItem(getEntityDescriptor().getAppointment().getAppointee());
         }
     }
     private Integer getHoursFromDuration(long duration){
@@ -189,7 +187,7 @@ public class AppointmentViewDialog extends javax.swing.JDialog
         DefaultComboBoxModel<EntityDescriptor.Patient> model = 
                 new DefaultComboBoxModel<>();
         ArrayList<EntityDescriptor.Patient> patients = 
-                getEntityDescriptor().getCollection().getPatients();
+                getEntityDescriptor().getPatients().getData();
         Iterator<EntityDescriptor.Patient> it = patients.iterator();
         while (it.hasNext()){
             EntityDescriptor.Patient patient = it.next();
@@ -218,7 +216,7 @@ public class AppointmentViewDialog extends javax.swing.JDialog
      * intervals
      */
     private String getDefaultTime(){
-        String result = null;
+        String result;
         LocalTime now = LocalTime.now();
         //check if current time is before the first appointment time
         if (now.compareTo(LocalTime.parse("08:00")) == -1){

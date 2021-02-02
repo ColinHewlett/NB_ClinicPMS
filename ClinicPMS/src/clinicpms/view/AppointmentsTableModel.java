@@ -9,15 +9,17 @@ import clinicpms.controller.EntityDescriptor;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 //import javax.swing.table.AbstractTableModel;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
 
 /**
  *
  * @author colin
  */
-public class AppointmentsTableModel extends DefaultTableModel {
-    private ArrayList<EntityDescriptor.Appointment> appointments = null;
+public class AppointmentsTableModel extends AbstractTableModel {
+    private List<EntityDescriptor.Appointment> appointments = null;
     private enum COLUMN{From, Duration, Patient, Notes};
     private final Class[] columnClass = new Class[] {
         LocalDateTime.class, 
@@ -25,11 +27,11 @@ public class AppointmentsTableModel extends DefaultTableModel {
         EntityDescriptor.Patient.class,
         String.class};
     
-    public ArrayList<EntityDescriptor.Appointment> getAppointments(){
+    public List<EntityDescriptor.Appointment> getAppointments(){
         return this.appointments;
     }
     
-    public AppointmentsTableModel(ArrayList<EntityDescriptor.Appointment> appointments){
+    public AppointmentsTableModel(List<EntityDescriptor.Appointment> appointments){
         this.appointments = appointments;
     }
 
@@ -64,7 +66,7 @@ public class AppointmentsTableModel extends DefaultTableModel {
         switch (column){
             case 0 -> result = appointment.getData().getStart();
             case 1 -> result = appointment.getData().getDuration();
-            case 2 -> result = appointment.getPatient();
+            case 2 -> result = appointment.getAppointee();
             case 3 -> result = appointment.getData().getNotes();
         }
         return result;

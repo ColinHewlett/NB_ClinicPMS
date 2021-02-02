@@ -107,13 +107,16 @@ public class CSVStore extends Store {
         }
 
         try{
-            File file = new File(appointmentsPath.toString());
+            File file = new File(patientsPath.toString());
             file.createNewFile();
             patientReader = Files.newBufferedReader(patientsPath);
             csvPatientsReader = new CSVReader(patientReader);
         }
         catch (IOException e){
-            throw new StoreException(e.getMessage(), ExceptionType.IO_EXCEPTION);
+            String message = "IOException message -> " + e.getMessage() + "\n" +
+                    "StoreException message -> Error encountered in CSVStore constructor " +
+                    "on initialisation of patientReader File object";
+            throw new StoreException(message, ExceptionType.IO_EXCEPTION);
         }
         
         File patientFile = new File(patientsPath.toString());

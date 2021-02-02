@@ -5,6 +5,7 @@
  */
 package clinicpms.controller;
 
+import clinicpms.store.exceptions.StoreException;
 import clinicpms.view.DesktopView;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public class DesktopViewController extends ViewController{
         view.setSize(850, 700);
         view.setVisible(true);
         setView(view);
-        view.setContentPane(view);
+        //view.setContentPane(view);
         
         appointmentViewControllers = new ArrayList<>();
         patientViewControllers = new ArrayList<>();
@@ -48,6 +49,8 @@ public class DesktopViewController extends ViewController{
     
     @Override
     public void actionPerformed(ActionEvent e){
+        String s;
+        s = e.getSource().getClass().getSimpleName();
         switch(e.getSource().getClass().getSimpleName()){
             case "DesktopView" -> doDesktopViewAction(e);
             case "AppointmentViewController" -> doAppointmentViewControllerAction(e);
@@ -118,7 +121,7 @@ public class DesktopViewController extends ViewController{
             if (isAppointmentViewControllerActive||isPatientViewControllerActive){
                 message = "At least one patient or appointment view is active. Close application anyway?";
             }
-            else message = "Close application?";
+            else {message = "Close application?";}
             int close = JOptionPane.showOptionDialog(getView(),
                             message,null,
                             JOptionPane.YES_NO_OPTION,
@@ -128,16 +131,35 @@ public class DesktopViewController extends ViewController{
                             null);
             if (close == JOptionPane.YES_OPTION){
                 this.isDesktopPendingClosure = true;
-                requestViewControllersToCloseViews();
+                if (isAppointmentViewControllerActive||isPatientViewControllerActive){
+                    requestViewControllersToCloseViews();
+                }
+                else {
+                    getView().dispose();
+                    System.exit(0);
+                }    
             }
         }
         else if (e.getActionCommand().equals(
             ViewController.DesktopViewControllerActionEvent.
                     DESKTOP_VIEW_APPOINTMENTS_REQUEST.toString())){
-            appointmentViewControllers.add(
-                                    new AppointmentViewController(this, getView()));
-            appointmentViewControllers.get(appointmentViewControllers.size()-1).
-                    getView().setContentPane(this.getView());
+            try{
+                appointmentViewControllers.add(
+                                        new AppointmentViewController(this, getView()));
+                AppointmentViewController avc = 
+                        appointmentViewControllers.get(appointmentViewControllers.size()-1);
+                avc.getView().setContentPane(this.getView().getDeskTop());
+                avc.getView().setVisible(true);
+                avc.getView().setTitle("Appointments");
+                avc.getView().setClosable(true);
+                avc.getView().setMaximizable(true);
+                avc.getView().setIconifiable(true);
+                avc.getView().setResizable(true);
+            }
+            catch (StoreException ex){
+                JOptionPane.showMessageDialog(getView(),
+                                          new ErrorMessagePanel(ex.getMessage()));
+            }
         }
         else if (e.getActionCommand().equals(
             ViewController.DesktopViewControllerActionEvent.
@@ -145,7 +167,7 @@ public class DesktopViewController extends ViewController{
             patientViewControllers.add(
                                     new PatientViewController(this, getView()));
             patientViewControllers.get(patientViewControllers.size()-1).
-                    getView().setContentPane(this.getView());
+                    getView().setContentPane(this.getView().getDeskTop());
         } 
         /**
          * user has attempted to close the desktop view
@@ -173,8 +195,8 @@ public class DesktopViewController extends ViewController{
     }
 
     private DesktopView getView(){
-        return view;
-    }
+        return this.view;
+    }       
     private void setView(DesktopView view){
         this.view = view;
     }

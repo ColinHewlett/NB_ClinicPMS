@@ -15,25 +15,29 @@ import java.time.format.DateTimeFormatter;
  * @author colin
  */
 public class EntityDescriptor {
-    private enum StringRepresentation{COMPLETE, PARTIAL};
-
     private EntityDescriptor.Appointment appointment = null;
     private EntityDescriptor.Patient patient = null;
-    private EntityDescriptor.Selection selection = null;
-    private EntityDescriptor.Collection collection = null;
+    private EntityDescriptor.PatientGuardian patientGuardian = null;
+    private EntityDescriptor.PatientAppointmentHistory patientAppointmentHistory = null;
+    private EntityDescriptor.Request request= null;
+    private EntityDescriptor.Appointments appointments = null;
+    private EntityDescriptor.Patients patients = null;
 
     protected EntityDescriptor() {
         appointment = new EntityDescriptor.Appointment();
         patient = new EntityDescriptor.Patient();
-        selection = new EntityDescriptor.Selection();
-        collection = new EntityDescriptor.Collection();
+        patientGuardian = new EntityDescriptor.PatientGuardian();
+        patientAppointmentHistory = new EntityDescriptor.PatientAppointmentHistory();
+        appointments = new EntityDescriptor.Appointments();     
+        patients = new EntityDescriptor.Patients();  
+        request = new EntityDescriptor.Request();
     }
 
     public EntityDescriptor.Appointment getAppointment() {
         return appointment;
     }
     
-    public void setAppointment(EntityDescriptor.Appointment value) {
+    protected void setAppointment(EntityDescriptor.Appointment value) {
         this.appointment = value;
     }
 
@@ -44,13 +48,41 @@ public class EntityDescriptor {
     protected void setPatient(EntityDescriptor.Patient value){
         patient = value;
     }
-
-    public EntityDescriptor.Selection getSelection(){
-        return selection;
+    
+    public EntityDescriptor.PatientGuardian getPatientGuardian(){
+        return patientGuardian;
     }
     
-    public EntityDescriptor.Collection getCollection(){
-        return collection;
+    protected void setPatientGuardian(EntityDescriptor.PatientGuardian value){
+        patientGuardian = value;
+    }
+    
+    public EntityDescriptor.PatientAppointmentHistory getPatientAppointmentHistory(){
+        return patientAppointmentHistory;
+    }
+    
+    protected void setPatientAppointmentHistory(EntityDescriptor.PatientAppointmentHistory value){
+        patientAppointmentHistory = value;
+    }
+
+    public EntityDescriptor.Request getRequest(){
+        return request;
+    }
+    
+    public EntityDescriptor.Appointments getAppointments(){
+        return appointments;
+    }
+    
+    public void setAppointments(EntityDescriptor.Appointments value){
+        appointments = value;
+    }
+    
+    public EntityDescriptor.Patients getPatients(){
+        return patients;
+    }
+    
+    public void setPatients (EntityDescriptor.Patients value){
+        patients = value;
     }
 
     /**
@@ -69,7 +101,7 @@ public class EntityDescriptor {
             return data;
         }
 
-        public EntityDescriptor.Patient getPatient(){
+        public EntityDescriptor.Patient getAppointee(){
             return appointee;
         }
         
@@ -77,7 +109,7 @@ public class EntityDescriptor {
             data = value;
         }
 
-        protected void setPatient(EntityDescriptor.Patient value){
+        protected void setAppointee(EntityDescriptor.Patient value){
             appointee = value;
         }
         
@@ -125,21 +157,17 @@ public class EntityDescriptor {
 
     public class Patient {
         private RenderedPatient data = null;
-        private Patient guardian = null;
-        private AppointmentHistory appointmentHistory = null;
 
         protected Patient() {
             data = new RenderedPatient();
-            patient = new Patient();
-            appointmentHistory = new AppointmentHistory();
         }
         
-        public AppointmentHistory getAppointmentHistory(){
-            return appointmentHistory;
+        protected void setData(RenderedPatient value) {
+            data = value;
         }
-        
-        public void setAppointmentHistory(AppointmentHistory value){
-            appointmentHistory = value;
+
+        public RenderedPatient getData() {
+            return data;
         }
         
         @Override
@@ -170,10 +198,9 @@ public class EntityDescriptor {
         @Override
         public boolean equals(Object obj) 
         { 
-
-        // if both the object references are  
-        // referring to the same object. 
-        if(this == obj) 
+            // if both the object references are  
+            // referring to the same object. 
+            if(this == obj) 
                 return true; 
 
             // checks if the comparison involves 2 objecs of the same type 
@@ -200,6 +227,15 @@ public class EntityDescriptor {
             }
         } 
 
+    }
+        
+    public class PatientGuardian{
+        RenderedPatient data = null;
+        
+        protected PatientGuardian() {
+            data = new RenderedPatient();
+        }
+        
         protected void setData(RenderedPatient value) {
             data = value;
         }
@@ -208,56 +244,132 @@ public class EntityDescriptor {
             return data;
         }
         
-        /**
-         * scope of business rule -> a guardian will only exist if 
-         * IsGuardianAPatient field is set in associated patient object
-         * @return Patient
-         */
-        public EntityDescriptor.Patient getGuardian(){
-            return guardian;
+        @Override
+        public String toString(){
+            String name = null;
+            if (getData().getTitle() != null){
+            name = name + getData().getTitle();
+        }
+        if (getData().getForenames() != null){
+            if (name!=null){
+                name = name + " " + getData().getForenames();
+            }
+            else{
+                name = getData().getForenames();
+            }
+        }
+        if (getData().getSurname()!=null){
+            if (name!=null){
+                name = name + " " + getData().getSurname();
+            }
+            else {
+                name = getData().getSurname();
+            }
+        }
+        return name;
         }
         
-        protected void setGuardian(Patient value){
-            guardian = value;
-        }
+        @Override
+        public boolean equals(Object obj) 
+        { 
+            // if both the object references are  
+            // referring to the same object. 
+            if(this == obj) 
+                return true; 
 
-        public class AppointmentHistory{
-            private ArrayList<EntityDescriptor.Appointment> dentalAppointments = null;
-            private ArrayList<EntityDescriptor.Appointment> hygieneAppointments = null;
-        
-            protected AppointmentHistory(){
-                dentalAppointments = new ArrayList<>();
-                hygieneAppointments = new ArrayList<>();
-            }
-            public ArrayList<EntityDescriptor.Appointment> getDentalAppointments(){
-                return dentalAppointments;
-            }
-            
-            protected void setDentalAppointments(ArrayList<EntityDescriptor.Appointment> value){
-                dentalAppointments = value;
-            }
+            // checks if the comparison involves 2 objecs of the same type 
+            if(obj == null || obj.getClass()!= this.getClass()) 
+                return false; 
 
-            public ArrayList<EntityDescriptor.Appointment> getHygieneAppointments(){
-                return hygieneAppointments;
-            }
+            // type casting of the argument.  
+            EntityDescriptor.Patient patient = (EntityDescriptor.Patient) obj; 
 
-            protected void setHygieneAppointments(ArrayList<EntityDescriptor.Appointment> value){
-                hygieneAppointments = value;
+            // comparing the state of argument with  
+            // the state of 'this' Object. 
+            return (patient.getData().getKey().equals(this.getData().getKey())); 
+        } 
+
+        @Override
+        public int hashCode() 
+        { 
+            // the patient.key() value is returned as this object's hashcode 
+            if (this.getData().getKey()!=null){
+                return this.getData().getKey();
+            }
+            else{
+                return -1;
             }
         }
     }
+
+    public class PatientAppointmentHistory{
+        private ArrayList<EntityDescriptor.Appointment> dentalAppointments = null;
+        private ArrayList<EntityDescriptor.Appointment> hygieneAppointments = null;
+        
+        protected PatientAppointmentHistory(){
+            dentalAppointments = new ArrayList<>();
+            hygieneAppointments = new ArrayList<>();
+        }
+        
+        public ArrayList<EntityDescriptor.Appointment> getDentalAppointments(){
+            return dentalAppointments;
+        }
+        
+        public ArrayList<EntityDescriptor.Appointment> getHygieneAppointments(){
+            return hygieneAppointments;
+        }
+        
+        protected void setDentalAppointments(ArrayList<EntityDescriptor.Appointment> value){
+            dentalAppointments = value;
+        }
+        
+        protected void setHygieneAppointments(ArrayList<EntityDescriptor.Appointment> value){
+            hygieneAppointments = value;
+        }
+    } 
+
+    public class Appointments{
+        private ArrayList<EntityDescriptor.Appointment> data = null;
+        
+        public Appointments(){
+            data = new ArrayList<>();
+        }
+        
+        public ArrayList<EntityDescriptor.Appointment> getData(){
+            return data;
+        }
+        
+        public void setData(ArrayList<EntityDescriptor.Appointment> value){
+            data = value;
+        } 
+    }
     
-    public class Selection {
+    public class Patients{
+        private ArrayList<EntityDescriptor.Patient> data = null;
+        
+        public Patients(){
+            data = new ArrayList<>();
+        }
+        
+        public ArrayList<EntityDescriptor.Patient> getData(){
+            return data;
+        }
+        
+        public void setData(ArrayList<EntityDescriptor.Patient> value){
+            data = value;
+        } 
+    }
+    public class Request {
         
         private EntityDescriptor.Patient patient = null;
         private EntityDescriptor.Appointment appointment = null;
         private EntityDescriptor.Patient guardian = null;
-        private EntityDescriptor.Patient appointee = null;
         private LocalDate day = null;
 
-        protected Selection() {
+        protected Request() {
             appointment = new EntityDescriptor.Appointment();
             patient = new EntityDescriptor.Patient();
+            guardian = new EntityDescriptor.Patient();
             day = LocalDate.now();
         }
         
@@ -277,183 +389,20 @@ public class EntityDescriptor {
             appointment = value;
         }
         
-        public EntityDescriptor.Patient getGuardian() {
+        public EntityDescriptor.Patient getPatientGuardian() {
             return guardian;
         }
         
         public void setGuardian(EntityDescriptor.Patient value){
             guardian = value;
         }
-        
-        public EntityDescriptor.Patient getAppointee() {
-            return appointee;
-        }
-        
-        public void setAppointee(EntityDescriptor.Patient value){
-            appointee = value;
-        }
-        
+
         public LocalDate getDay(){
-            return this.day;
+            return day;
         }
         
         public void setDay(LocalDate value){
             this.day = value;
         }
     }
-    
-    public class Collection{
-        private ArrayList<EntityDescriptor.Appointment> appointments = null;
-        private ArrayList<EntityDescriptor.Patient> patients = null;
-        
-        protected Collection(){
-            appointments = new ArrayList<>();
-            patients = new ArrayList<>();
-        }
-        
-        public ArrayList<EntityDescriptor.Appointment> getAppointments(){
-            return appointments;
-        }
-        
-        public void setAppointments(ArrayList<EntityDescriptor.Appointment> value){
-            appointments = value;
-        }
-        public void setPatients(ArrayList<EntityDescriptor.Patient> value){
-            patients = value;
-        }
-        
-        public ArrayList<EntityDescriptor.Patient> getPatients(){
-            return patients;
-        }
-        /*
-        public class Appointment {
-            RenderedAppointment data = null;
-            Patient appointee = null;
-            
-            protected Appointment(){
-                data = new RenderedAppointment();
-            }
-            
-            public RenderedAppointment getData(){
-                return data;
-            }
-            
-            public void setData(RenderedAppointment value){
-                data = value;
-            }
-            
-            public Patient getAppointee(){
-                return appointee;
-            }
-            
-            public void setAppointee(Patient patient){
-                appointee = patient;
-            }
-            
-            public class Patient {
-                private RenderedPatient data = null;
-                private Guardian guardian = null;
-
-                protected Patient() {
-                    data = new RenderedPatient();
-                    guardian = new Guardian();
-                }
-
-                public void setData(RenderedPatient value) {
-                    data = value;
-                }
-
-                public RenderedPatient getData() {
-                    return data;
-                }
-                
-                public boolean isKeyDefined(){//view might want to know
-                    return getData().getKey()!=null;
-                }
-
-                public Guardian getGuardian(){
-                    return guardian;
-                }
-
-                public class Guardian {
-                    private RenderedPatient data = null;
-
-                    protected Guardian(){
-                        data = new RenderedPatient();
-                    }
-
-                    public void setData(RenderedPatient value) {
-                    data = value;
-                    }
-
-                    public RenderedPatient getData() {
-                        return data;
-                    }  
-                }
-                
-            }
-            
-        }
-        
-        public class Patients {
-            ArrayList<EntityDescriptor.Collection.Patients.Patient> data = null;
-            
-            protected Patients(){
-                data = new ArrayList<>();
-            }
-            
-            public ArrayList<EntityDescriptor.Collection.Patients.Patient> getData(){
-                return data;
-            }
-            public void setData(ArrayList<EntityDescriptor.Collection.Patients.Patient> value){
-                data = value;
-            }
-            
-            
-            public class Patient {
-                private RenderedPatient data = null;
-                private Guardian guardian = null;
-
-                protected Patient() {
-                    data = new RenderedPatient();
-                    guardian = new Guardian();
-                }
-
-                public void setData(RenderedPatient value) {
-                    data = value;
-                }
-
-                public RenderedPatient getData() {
-                    return data;
-                }
-
-                public boolean isKeyDefined(){//view might want to know
-                    return getData().getKey()!=null;
-                }
-
-                public Guardian getGuardian(){
-                    return guardian;
-                }
-
-                public class Guardian {
-                    private RenderedPatient data = null;
-
-                    protected Guardian(){
-                        data = new RenderedPatient();
-                    }
-
-                    public void setData(RenderedPatient value) {
-                    data = value;
-                    }
-
-                    public RenderedPatient getData() {
-                        return data;
-                    }  
-                }
-            }
-            
-        } 
-        */
-    }
-
 }

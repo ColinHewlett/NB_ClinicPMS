@@ -7,7 +7,6 @@ package clinicpms.view;
 import clinicpms.controller.EntityDescriptor;
 import clinicpms.controller.ViewController;
 import clinicpms.controller.ViewController.AppointmentViewControllerActionEvent;
-import clinicpms.view.interfaces.IView;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.optionalusertools.DateChangeListener;
 import com.github.lgooddatepicker.zinternaltools.DateChangeEvent;
@@ -16,14 +15,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.beans.PropertyVetoException;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.beans.PropertyChangeEvent;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
@@ -33,31 +31,11 @@ import javax.swing.event.InternalFrameEvent;
  * @author colin
  */
 public class AppointmentsForDayView extends View{
-    private final int START_COLUMN = 0;
-    private final int DURATION_COLUMN = 1;
-    private final int PATIENT_COLUMN = 2;
-    private final int NOTES_COLUMN = 3;
     private enum COLUMN{From,Duration,Patient,Notes};
     private JTable tblAppointmentsForDay = null;
-    private DefaultTableModel model = null; 
-    private Object source = null;
-    private ArrayList<Integer> appointmentKeys = null;
-    private ArrayList<Integer> patientKeys = null;
     private ActionListener myController = null;
-    private String day = null;
-    private IView view = null;
     private AppointmentsTableModel tableModel = null;
-    
-    //state variables which support IAppointView interface
-    private String key = null;
-    private String start = null;
-    private String duration = null;
-    private String notes = null;
     private EntityDescriptor entityDescriptor = null;
-    private DateTimeFormatter dmyFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private DateTimeFormatter hhmm12Format = DateTimeFormatter.ofPattern("HH:mm a");
-    //state variables which support IPatientShortData interface
-    private String guardianKey = null;
 
     /**
      * 
@@ -72,39 +50,35 @@ public class AppointmentsForDayView extends View{
             initialiseViewFromEDCollection();
         }
     }
+    @Override
     public EntityDescriptor getEntityDescriptor(){
         return this.entityDescriptor;
     }
     private void setEntityDescriptor(EntityDescriptor value){
         this.entityDescriptor = value;
     }   
-    private AppointmentsTableModel getTableModel(){
-        return this.tableModel;
-    }
-    private void setTableModel(AppointmentsTableModel value){
-        this.tableModel = value;
-    }
     private void initialiseViewFromEDCollection(){
         ArrayList<EntityDescriptor.Appointment> appointments = 
-                getEntityDescriptor().getCollection().getAppointments();
-        AppointmentsTableModel model = new AppointmentsTableModel(appointments);
-        this.tblAppointmentsForDay.setModel(model);
+                getEntityDescriptor().getAppointments().getData();
+        tableModel = new AppointmentsTableModel(appointments);
+        this.tblAppointmentsForDay.setModel(tableModel);
     }
     private void initialiseEDSelectionFromView(int row){
         if (row > -1){
-            getEntityDescriptor().getSelection().setAppointment(
-                    getEntityDescriptor().getCollection().getAppointments().get(row));
+            getEntityDescriptor().getRequest().setAppointment(
+                    getEntityDescriptor().getAppointments().getData().get(row));
         }
     }
 
     /**
-     * Creates new form AppointmentsForDayViewController
+     * 
+     * @param controller
+     * @param ed 
      */
     public AppointmentsForDayView(ActionListener controller, EntityDescriptor ed) {
-        this.setVisible(true);
-        this.setTitle("Appointments");
+        this.myController = controller;
         this.setEntityDescriptor(ed);
-        setView(this);
+        //setView(this);
         initComponents();
         /**
          * Establish an InternalFrameListener for when the view is closed 
@@ -119,7 +93,9 @@ public class AppointmentsForDayView extends View{
             }
         };
         
-        this.tblAppointmentsForDay = new JTable();
+        List<EntityDescriptor.Appointment> appointments = new ArrayList<EntityDescriptor.Appointment>();
+        this.tableModel = new AppointmentsTableModel(appointments);
+        this.tblAppointmentsForDay = new JTable(tableModel);
         this.scrAppointmentsForDayTable.add(this.tblAppointmentsForDay);
         this.tblAppointmentsForDay.setDefaultRenderer(LocalDateTime.class, new AppointmentsTableLocalDateTimeRenderer());
         this.tblAppointmentsForDay.setDefaultRenderer(Duration.class, new AppointmentsTableDurationRenderer());
@@ -128,10 +104,11 @@ public class AppointmentsForDayView extends View{
         this.tblAppointmentsForDay.getColumnModel().getColumn(COLUMN.Duration.ordinal()).setPreferredWidth(40);
         this.tblAppointmentsForDay.getColumnModel().getColumn(COLUMN.Patient.ordinal()).setPreferredWidth(150);
         this.tblAppointmentsForDay.getColumnModel().getColumn(COLUMN.Notes.ordinal()).setPreferredWidth(350);
-        this.initialiseViewFromEDCollection();
+        //this.initialiseViewFromEDCollection();
         
         DatePicker appointmentDayPicker = new DatePicker();
-        appointmentDayPicker.addDateChangeListener(new AppointmentsForDayView.AppointmentDayDateChangeListener());
+        appointmentDayPicker.addDateChangeListener(new AppointmentsForDayView.AppointmentDateChangeListener());
+        
         pnlControls.add(appointmentDayPicker);
         this.txtAppointmentDay.addFocusListener(new FocusAdapter() {
             @Override
@@ -144,74 +121,11 @@ public class AppointmentsForDayView extends View{
             }
         });
 
-        this.setClosable(true);
-        this.setMaximizable(true);
-        this.setIconifiable(true);
-        this.setResizable(true);
- 
     }
     private ActionListener getMyController(){
         return myController;
     }
-    private void setMyController(ActionListener vc){
-        myController = vc;
-    }
-    
-    private void setView(IView view){
-        this.view = view;
-    }
-    
-    /**********************************************
-     *       IAppointmentView implementation      *
-     **********************************************
-     */
-    
-    public String getDay(){
-        return day;
-    }
-    private void setDay(String view ){
-        this.day = view;
-    }
-    
-    private String getKey(){
-        return key;
-    }
-    private void setKey(String value ){
-        this.key = value;
-    }
-    
-    private String getStart(){
-        return start;
-    }
-    private void setStart(String start ){
-        this.start = start;
-    }
-    
-    private String getDuration(){
-        return duration;
-    }
-    private void setDuration(String duration ){
-        this.duration = duration;
-    }
-    
-    private String getNotes(){
-        return notes;
-    }
-    private void setNotes(String notes ){
-        this.notes = notes;
-    }
-    
-    /**********************************************
-     *       IPatientShortData implementation     *
-     **********************************************
-     */
-    private String getGuardianKey(){
-        return guardianKey;
-    }
-    private void setGuardianKey(String key ){
-        this.guardianKey = key;
-    }
-   
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -327,7 +241,7 @@ public class AppointmentsForDayView extends View{
         if (row == -1){
             JOptionPane.showMessageDialog(this, "An appointment has not been selected for update");
         }
-        else if (getEntityDescriptor().getCollection().getAppointments().get(row).getData().IsEmptySlot()){
+        else if (getEntityDescriptor().getAppointments().getData().get(row).getData().IsEmptySlot()){
             JOptionPane.showMessageDialog(this, "An appointment has not been selected for update");
         }
         else{
@@ -362,17 +276,17 @@ public class AppointmentsForDayView extends View{
     private javax.swing.JTextField txtAppointmentDay;
     // End of variables declaration//GEN-END:variables
 
-    class AppointmentDayDateChangeListener implements DateChangeListener {
-
+    class AppointmentDateChangeListener implements DateChangeListener {
+        @Override
         public void dateChanged(DateChangeEvent event) {
             LocalDate date = event.getNewDate();
             if (date == null) {
                 //if date field cleared, make equal to now()
                 date = LocalDate.now();
             }
-            if (!getEntityDescriptor().getSelection().getDay().equals(date)){
+            if (!getEntityDescriptor().getRequest().getDay().equals(date)){
                 //only if selected date different from selection in EntityDescriptor
-                getEntityDescriptor().getSelection().setDay(date);
+                getEntityDescriptor().getRequest().setDay(date);
                 ActionEvent actionEvent = new ActionEvent(this, 
                         ActionEvent.ACTION_PERFORMED,
                         AppointmentViewControllerActionEvent.APPOINTMENTS_REQUEST.toString());
